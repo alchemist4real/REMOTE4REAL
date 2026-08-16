@@ -1,0 +1,10 @@
+# Vercel Ignore
+build/
+dist/
+installers/Desktop/REMOTE4REAL-Windows/
+REMOTE4REALMobile/
+__pycache__/
+*.spec
+.git
+.expo/
+node_modules/

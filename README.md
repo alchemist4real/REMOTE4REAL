@@ -7,6 +7,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Author-alchemist4real-black?style=flat-square" alt="Author" />
+  <a href="https://remote4real-showcase.vercel.app" target="_blank"><img src="https://img.shields.io/badge/Live%20Showcase-remote4real--showcase.vercel.app-black?style=flat-square&logo=vercel" alt="Vercel Showcase" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Android%20%7C%20iOS-black?style=flat-square" alt="Platforms" />
   <img src="https://img.shields.io/badge/Latency-%3C3ms-000000?style=flat-square" alt="Latency" />
   <img src="https://img.shields.io/badge/Design-Monochromatic%20OffBit-black?style=flat-square" alt="Design" />
@@ -92,12 +93,16 @@ REMOTE4REAL/
 
 ---
 
-## 🌐 Web Showcase (Vercel Ready)
-Deploy the interactive product showcase site directly to Vercel:
+## 🌐 Live Web Showcase (Vercel)
+Experience the interactive simulator and documentation live on Vercel:
+👉 **[https://remote4real-showcase.vercel.app](https://remote4real-showcase.vercel.app)**
+
+To deploy your own instance to Vercel:
 ```powershell
-vercel
+cd web
+npx vercel --prod
 ```
-*Or import this repository directly on [Vercel Dashboard](https://vercel.com/new).*
+*Or import this repository directly on the [Vercel Dashboard](https://vercel.com/new).*
 
 ---
 
