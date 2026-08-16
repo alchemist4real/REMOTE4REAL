@@ -104,19 +104,45 @@ function initTrackpadSim() {
    3. MEDIA REMOTE SIMULATOR
    ========================================================= */
 function initMediaSim() {
+  const ytSubtab = document.getElementById('sim-subtab-yt');
+  const spotifySubtab = document.getElementById('sim-subtab-spotify');
+  const trackTitle = document.getElementById('sim-track-title');
+  const trackArtist = document.getElementById('sim-track-artist');
+  const statusDisplay = document.getElementById('sim-media-status');
+
   const playBtn = document.getElementById('sim-btn-play');
   const prevBtn = document.getElementById('sim-btn-prev');
   const nextBtn = document.getElementById('sim-btn-next');
-  const statusDisplay = document.getElementById('sim-media-status');
 
+  let currentApp = 'YOUTUBE';
   let isPlaying = true;
+
+  if (ytSubtab && spotifySubtab) {
+    ytSubtab.addEventListener('click', () => {
+      currentApp = 'YOUTUBE';
+      ytSubtab.classList.add('active');
+      spotifySubtab.classList.remove('active');
+      if (trackTitle) trackTitle.textContent = "YOUTUBE 4K AUDIO STREAM";
+      if (trackArtist) trackArtist.textContent = "ALCHEMIST4REAL — HARDWARE SCANCODE CONTROL";
+      if (statusDisplay) statusDisplay.textContent = isPlaying ? "PLAYING • YOUTUBE" : "PAUSED";
+    });
+
+    spotifySubtab.addEventListener('click', () => {
+      currentApp = 'SPOTIFY';
+      spotifySubtab.classList.add('active');
+      ytSubtab.classList.remove('active');
+      if (trackTitle) trackTitle.textContent = "SPOTIFY HI-FI DESKTOP PLAYLIST";
+      if (trackArtist) trackArtist.textContent = "ALCHEMIST4REAL — 320 KBPS DIRECT STREAM";
+      if (statusDisplay) statusDisplay.textContent = isPlaying ? "PLAYING • SPOTIFY" : "PAUSED";
+    });
+  }
 
   if (playBtn) {
     playBtn.addEventListener('click', () => {
       isPlaying = !isPlaying;
       playBtn.textContent = isPlaying ? "PAUSE [SPACE]" : "PLAY [SPACE]";
       if (statusDisplay) {
-        statusDisplay.textContent = isPlaying ? "PLAYING • SPOTIFY/YOUTUBE" : "PAUSED";
+        statusDisplay.textContent = isPlaying ? `PLAYING • ${currentApp}` : "PAUSED";
       }
     });
   }
@@ -124,8 +150,8 @@ function initMediaSim() {
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
       if (statusDisplay) {
-        statusDisplay.textContent = "PREVIOUS TRACK [VK_MEDIA_PREV]";
-        setTimeout(() => { statusDisplay.textContent = isPlaying ? "PLAYING" : "PAUSED"; }, 1000);
+        statusDisplay.textContent = `PREVIOUS TRACK [${currentApp === 'YOUTUBE' ? 'SHIFT+P' : 'CTRL+LEFT'}]`;
+        setTimeout(() => { statusDisplay.textContent = isPlaying ? `PLAYING • ${currentApp}` : "PAUSED"; }, 1000);
       }
     });
   }
@@ -133,8 +159,8 @@ function initMediaSim() {
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
       if (statusDisplay) {
-        statusDisplay.textContent = "NEXT TRACK [VK_MEDIA_NEXT]";
-        setTimeout(() => { statusDisplay.textContent = isPlaying ? "PLAYING" : "PAUSED"; }, 1000);
+        statusDisplay.textContent = `NEXT TRACK [${currentApp === 'YOUTUBE' ? 'SHIFT+N' : 'CTRL+RIGHT'}]`;
+        setTimeout(() => { statusDisplay.textContent = isPlaying ? `PLAYING • ${currentApp}` : "PAUSED"; }, 1000);
       }
     });
   }

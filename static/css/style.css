@@ -146,18 +146,24 @@ html, body {
   justify-content: space-between;
   background: var(--bg-void);
   border-bottom: 1.5px solid var(--border-medium);
-  padding: 0 10px;
+  padding: 0 8px;
   height: 44px;
   min-height: 44px;
   max-height: 44px;
   z-index: 100;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .logo-badge {
@@ -172,20 +178,25 @@ html, body {
   font-size: 0.9rem;
   font-family: var(--font-primary);
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .brand-text {
   font-family: var(--font-primary);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .status-pill {
@@ -363,14 +374,21 @@ html, body {
   padding: 6px 8px calc(52px + var(--safe-bottom)) 8px;
   gap: 5px;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .deck-modifier-bar {
   display: flex;
   gap: 4px;
   height: 30px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 2px;
   -webkit-overflow-scrolling: touch;
   flex-shrink: 0;
@@ -388,6 +406,7 @@ html, body {
   font-size: 0.72rem;
   white-space: nowrap;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .key-chip:active, .key-chip.active {
@@ -399,6 +418,9 @@ html, body {
 .touchpad-surface {
   flex: 1;
   min-height: 60px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background-color: var(--bg-subtle);
   background-image: radial-gradient(var(--border-medium) 1px, transparent 1px);
   background-size: 18px 18px;
@@ -453,6 +475,10 @@ html, body {
   padding: 2px 5px;
   height: 34px;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .typing-dock-inner {
@@ -460,10 +486,13 @@ html, body {
   align-items: center;
   height: 100%;
   gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .typing-dock-inner input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   padding: 4px 2px;
@@ -489,6 +518,7 @@ html, body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .deck-clear-btn {
@@ -501,6 +531,9 @@ html, body {
   height: 48px;
   gap: 5px;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .mouse-btn {
@@ -653,6 +686,8 @@ html, body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
   gap: 6px;
   box-sizing: border-box;
 }
@@ -665,11 +700,14 @@ html, body {
   padding: 2px;
   gap: 2px;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .media-subtab {
   flex: 1;
-  padding: 6px;
+  padding: 6px 4px;
   border-radius: 2px;
   border: none;
   background: transparent;
@@ -681,12 +719,17 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .media-subtab .svg-icon {
   width: 12px;
   height: 12px;
   fill: currentColor;
+  flex-shrink: 0;
 }
 
 .media-subtab.active {
@@ -698,12 +741,16 @@ html, body {
   display: none;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .media-panel.active { display: flex; }
 
 .launcher-cta-btn {
   width: 100%;
+  max-width: 100%;
   background: var(--ink-primary);
   border: 1.5px solid var(--border-dark);
   border-radius: 3px;
@@ -713,37 +760,49 @@ html, body {
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .launcher-cta-btn .cta-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .launcher-cta-btn .svg-icon {
   width: 14px;
   height: 14px;
   fill: currentColor;
+  flex-shrink: 0;
 }
 
 .launcher-cta-btn .cta-text {
   font-family: var(--font-primary);
   font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .launcher-cta-btn .cta-arrow {
   font-family: var(--font-primary);
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .yt-search-box {
   display: flex;
   gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 #yt-search-input {
   flex: 1;
+  min-width: 0;
   background: var(--bg-card);
   border: 1.5px solid var(--border-medium);
   border-radius: 3px;
@@ -752,6 +811,7 @@ html, body {
   font-family: var(--font-secondary);
   font-size: 0.8rem;
   outline: none;
+  box-sizing: border-box;
 }
 
 .yt-search-btn {
@@ -763,6 +823,7 @@ html, body {
   font-size: 0.72rem;
   padding: 0 10px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .media-hero-card {
@@ -773,12 +834,18 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .hero-top-row {
   display: flex;
   gap: 4px;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .media-ctrl-btn {
@@ -789,6 +856,10 @@ html, body {
   border-radius: 3px;
   padding: 8px 4px;
   cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .media-ctrl-btn.sec-btn {
@@ -807,10 +878,13 @@ html, body {
 .hero-seek-row {
   display: flex;
   gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .seek-btn {
   flex: 1;
+  min-width: 0;
   background: var(--bg-subtle);
   border: 1px solid var(--border-medium);
   color: var(--ink-primary);
@@ -820,6 +894,9 @@ html, body {
   border-radius: 2px;
   cursor: pointer;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .seek-btn:active {
@@ -835,6 +912,10 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .section-title {
@@ -846,10 +927,13 @@ html, body {
 .speed-presets-row {
   display: flex;
   gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .speed-btn, .spotify-mode-btn {
   flex: 1;
+  min-width: 0;
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   color: var(--ink-primary);
@@ -859,6 +943,9 @@ html, body {
   border-radius: 2px;
   cursor: pointer;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .speed-btn:active, .spotify-mode-btn:active {
@@ -868,8 +955,10 @@ html, body {
 
 .grid-controls-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .grid-btn {
@@ -882,6 +971,10 @@ html, body {
   border-radius: 2px;
   cursor: pointer;
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .grid-btn:active {
@@ -896,6 +989,8 @@ html, body {
   padding: 4px 6px calc(52px + var(--safe-bottom)) 6px;
   background: var(--bg-void);
   height: 100%;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -904,9 +999,11 @@ html, body {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   justify-content: space-between;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .gamepad-shoulders {
@@ -914,14 +1011,19 @@ html, body {
   justify-content: space-between;
   align-items: center;
   height: 38px;
-  gap: 4px;
+  gap: 3px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .shoulder-group {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex: 1;
+  min-width: 0;
 }
 
 .right-shoulder {
@@ -929,20 +1031,22 @@ html, body {
 }
 
 .gp-shoulder-btn {
-  width: clamp(48px, 14vw, 58px);
+  width: clamp(42px, 13vw, 56px);
+  min-width: 0;
   height: 34px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-dark);
   border-radius: 3px;
   color: var(--ink-primary);
   font-family: var(--font-primary);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .gp-shoulder-btn:active, .gp-shoulder-btn.active {

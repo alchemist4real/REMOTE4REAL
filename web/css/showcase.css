@@ -1049,3 +1049,61 @@ body {
     font-size: 32px;
   }
 }
+
+@media (max-width: 680px) {
+  .hero-title {
+    font-size: 26px;
+  }
+  .hero-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .simulator-tabs {
+    flex-wrap: wrap;
+  }
+  .sim-tab-btn {
+    flex: 1 1 45%;
+    font-size: 11px;
+    padding: 8px;
+  }
+  .sim-chip-bar {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .sim-key-chip {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  .telemetry-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .copy-command-box {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+    word-break: break-all;
+  }
+  .copy-btn {
+    align-self: flex-end;
+  }
+  .footer-grid {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .telemetry-grid {
+    grid-template-columns: 1fr;
+  }
+  .sim-tab-btn {
+    flex: 1 1 100%;
+  }
+  .brand-text {
+    font-size: 14px;
+  }
+  .brand-author-tag {
+    display: none;
+  }
+}
