@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 class Remote4RealDesktopGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("REMOTE4REAL — Desktop Companion")
+        self.root.title("REMOTE4REAL — Desktop Companion • by alchemist4real")
         self.root.geometry("660x740")
         self.root.minsize(600, 680)
         self.root.configure(bg="#ffffff")
@@ -76,6 +76,10 @@ class Remote4RealDesktopGUI:
         title_lbl = tk.Label(brand_frame, text="REMOTE4REAL", font=("Courier", 14, "bold"),
                              fg="#000000", bg="#ffffff")
         title_lbl.pack(side=tk.LEFT)
+
+        author_lbl = tk.Label(brand_frame, text="BY ALCHEMIST4REAL", font=("Courier", 8, "bold"),
+                              fg="#666666", bg="#f1f1f4", padx=4, pady=1)
+        author_lbl.pack(side=tk.LEFT, padx=(6, 0))
 
         # PIN Badge in Header
         pin_frame = tk.Frame(header_frame, bg="#ffffff")

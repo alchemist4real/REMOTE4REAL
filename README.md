@@ -1,10 +1,12 @@
 # REMOTE4REAL — Wireless PC & Console Controller Suite
 
 <p align="center">
-  <b>Ultra-low latency (<3ms) wireless PC touchpad, gamepad, screen mirroring, and media deck controller for Desktop, Android, and iOS.</b>
+  <b>Ultra-low latency (<3ms) wireless PC touchpad, gamepad, screen mirroring, and media deck controller for Desktop, Android, and iOS.</b><br>
+  <i>Engineered with surgical precision by <b>alchemist4real</b></i>
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Author-alchemist4real-black?style=flat-square" alt="Author" />
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Android%20%7C%20iOS-black?style=flat-square" alt="Platforms" />
   <img src="https://img.shields.io/badge/Latency-%3C3ms-000000?style=flat-square" alt="Latency" />
   <img src="https://img.shields.io/badge/Design-Monochromatic%20OffBit-black?style=flat-square" alt="Design" />
@@ -73,6 +75,7 @@ REMOTE4REAL/
 ├── controller_engine.py        # Low-level Win32 SendInput & Input Automation
 ├── screen_capture.py           # Real-time GDI/Win32 Screen Capture Engine
 ├── build_desktop.py            # Standalone Windows executable builder (PyInstaller)
+├── web/                        # Vercel-ready Interactive Web Showcase & Documentation
 ├── static/                     # Web client assets (HTML, CSS, JS, OffBit fonts)
 ├── REMOTE4REALMobile/          # Native React Native (Expo) Mobile Application
 │   ├── android/                # Native Android Gradle Project
@@ -83,10 +86,21 @@ REMOTE4REAL/
 │   ├── Android/                # APK build tools & ADB fast installer
 │   ├── iOS/                    # IPA cloud builder & iOS setup guide
 │   └── INSTALLATION_GUIDE.md   # Complete step-by-step master guide
+├── vercel.json                 # Zero-configuration Vercel deployment configuration
 └── requirements.txt            # Python dependencies
 ```
 
 ---
 
-## 📄 License
-This project is licensed under the [MIT License](./LICENSE).
+## 🌐 Web Showcase (Vercel Ready)
+Deploy the interactive product showcase site directly to Vercel:
+```powershell
+vercel
+```
+*Or import this repository directly on [Vercel Dashboard](https://vercel.com/new).*
+
+---
+
+## 📄 License & Credits
+- **Creator & Lead Engineer**: `alchemist4real`
+- **License**: Licensed under the [MIT License](./LICENSE).

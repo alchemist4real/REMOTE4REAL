@@ -1,4 +1,5 @@
 # REMOTE4REAL — Master Multi-Platform Installation Hub
+*Engineered by **alchemist4real***
 
 Welcome to the **REMOTE4REAL** installer suite. This package contains the installers, native project binaries, and automated setup tools for **Windows Desktop**, **Android**, and **iOS**.
 

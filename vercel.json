@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "remote4real",
+  "cleanUrls": true,
+  "outputDirectory": "web",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Engineered-By",
+          "value": "alchemist4real"
+        }
+      ]
+    }
+  ]
+}

@@ -476,7 +476,8 @@ class ControllerServer:
         ws_thread.start()
 
         print("\n" + "="*60)
-        print("[*] REMOTE4REAL CONTROLLER SERVER ONLINE!")
+        print("[*] REMOTE4REAL CONTROLLER SERVER ONLINE")
+        print("[*] ENGINEERED BY ALCHEMIST4REAL")
         print(f"[*] SECURITY PIN: {self.security_pin}")
         print("="*60)
         urls = self.get_connection_urls()

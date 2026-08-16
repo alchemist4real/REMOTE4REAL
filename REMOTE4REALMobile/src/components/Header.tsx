@@ -57,7 +57,10 @@ export const Header: React.FC<HeaderProps> = ({ currentIp, onIpChange }) => {
         <View style={styles.logoBadge}>
           <Text style={styles.logoText}>R4</Text>
         </View>
-        <Text style={styles.brandTitle}>REMOTE4REAL</Text>
+        <View>
+          <Text style={styles.brandTitle}>REMOTE4REAL</Text>
+          <Text style={{ fontFamily: 'Courier', fontSize: 7, fontWeight: '800', color: Colors.inkTertiary }}>BY ALCHEMIST4REAL</Text>
+        </View>
       </View>
 
       <View style={styles.actionsGroup}>
@@ -119,6 +122,10 @@ export const Header: React.FC<HeaderProps> = ({ currentIp, onIpChange }) => {
             <TouchableOpacity style={styles.saveBtn} onPress={handleConnect} activeOpacity={0.8}>
               <Text style={styles.saveBtnText}>AUTHORIZE & CONNECT</Text>
             </TouchableOpacity>
+
+            <Text style={{ textAlign: 'center', fontFamily: 'Courier', fontSize: 8, fontWeight: '800', color: Colors.inkTertiary, marginTop: 12 }}>
+              ENGINEERED BY ALCHEMIST4REAL
+            </Text>
           </View>
         </View>
       </Modal>
