@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <title>REMOTE4REAL</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/jsQR.min.js"></script>
+</head>
+<body class="theme-white-void">
+  <div id="app-wrapper">
+    <div id="app-container">
+
+      <!-- TOP MINIMAL STATUS & UTILITY BAR -->
+      <header id="top-bar">
+        <div class="brand">
+          <div class="logo-badge">R4</div>
+          <span class="brand-text">REMOTE4REAL</span>
+        </div>
+
+        <div class="header-actions">
+          <button id="btn-scan-qr" class="action-icon-btn highlight-btn" title="Scan QR Code">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm-2-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 0h2v2h-2v-2zM14 4h-2v6h2V4zm0 8h-2v2h2v-2zm-4 2H8v2h2v-2z"/></svg>
+            <span class="btn-label-sub">SCAN</span>
+          </button>
+
+          <div id="ping-indicator" class="status-pill disconnected" title="Connection Status">
+            <span class="status-dot"></span>
+            <span id="ping-text">OFFLINE</span>
+          </div>
+
+          <button id="btn-rotate-screen" class="action-icon-btn" title="Rotate Screen">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 7h10v2l3-3-3-3v2H5v6h2V7zm10 10H7v-2l-3 3 3 3v-2h12v-6h-2v4z"/></svg>
+            <span class="btn-label-sub">ROTATE</span>
+          </button>
+
+          <button id="btn-fullscreen" class="action-icon-btn" title="Fullscreen">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </button>
+
+          <button id="btn-settings" class="action-icon-btn" title="Settings">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.48.48 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.63 8.48c-.12.21-.08.47.12.61L4.78 10.7c-.05.31-.08.63-.08.95 0 .33.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.59zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN INTERACTIVE CONTROLLER VIEWS -->
+      <main id="view-container">
+
+        <!-- ============================================== -->
+        <!-- 1. UNIFIED LAPTOP DECK (TRACKPAD & KEYS)       -->
+        <!-- ============================================== -->
+        <section id="mode-touchpad" class="controller-mode-view active">
+          
+          <!-- Top Modifier & Shortcut Strip -->
+          <div class="deck-modifier-bar">
+            <button class="key-chip" data-combo="ctrl,c">COPY</button>
+            <button class="key-chip" data-combo="ctrl,v">PASTE</button>
+            <button class="key-chip" data-combo="ctrl,z">UNDO</button>
+            <button class="key-chip" data-combo="win,d">DESKTOP</button>
+            <button class="key-chip" data-combo="alt,tab">ALT+TAB</button>
+            <button class="key-chip" data-key="esc">ESC</button>
+            <button class="key-chip" data-key="tab">TAB</button>
+            <button class="key-chip" data-key="enter">ENTER</button>
+            <button class="key-chip" data-key="backspace">BKSP</button>
+          </div>
+
+          <!-- Main Touchpad Surface -->
+          <div class="touchpad-surface" id="touchpad-area">
+            <div class="touchpad-guide-hud">
+              <span class="hud-pill">1-FINGER MOVE • TAP CLICK • 2-FINGER SCROLL</span>
+            </div>
+            <div id="touch-ripple-container"></div>
+          </div>
+
+          <!-- Native Phone Keyboard Typing Dock -->
+          <div class="deck-typing-dock">
+            <div class="typing-dock-inner">
+              <input type="text" id="deck-native-input" placeholder="TYPE OR USE VOICE INPUT HERE..." autocomplete="off" autocapitalize="off" spellcheck="false">
+              <button id="btn-deck-send" class="deck-action-btn">OK</button>
+              <button id="btn-deck-clear" class="deck-clear-btn" title="Clear">CLR</button>
+            </div>
+          </div>
+
+          <!-- Tactile Click Buttons -->
+          <div class="mouse-action-bar">
+            <button class="mouse-btn left-btn" id="mouse-btn-left">
+              <span class="btn-main">LEFT CLICK</span>
+            </button>
+            <button class="mouse-btn middle-btn" id="mouse-btn-middle">
+              <span class="btn-sub">WHEEL</span>
+            </button>
+            <button class="mouse-btn right-btn" id="mouse-btn-right">
+              <span class="btn-main">RIGHT CLICK</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 2. TOUCHSCREEN LAPTOP SCREEN MIRROR MODE       -->
+        <!-- ============================================== -->
+        <section id="mode-screen" class="controller-mode-view">
+          
+          <!-- Screen Mirror Floating HUD Toolbar -->
+          <div class="screen-floating-toolbar">
+            <button id="btn-screen-fit" class="screen-tool-btn active">FIT</button>
+            <button id="btn-screen-fill" class="screen-tool-btn">FILL</button>
+            <button id="btn-screen-keys" class="screen-tool-btn">KEYS</button>
+            <button id="btn-screen-reconnect" class="screen-tool-btn">RECONNECT</button>
+            <span id="screen-fps-counter" class="screen-fps-badge">0 FPS</span>
+          </div>
+
+          <!-- Main Stream Canvas/Image Container -->
+          <div id="screen-mirror-container">
+            <img id="screen-stream-img" alt="PC Screen Live Stream" />
+            <div id="screen-loading-spinner" class="screen-spinner-overlay">
+              <div class="spinner"></div>
+              <span>STREAMING PC SCREEN...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 3. MEDIA DECK (YOUTUBE & SPOTIFY REMOTE)       -->
+        <!-- ============================================== -->
+        <section id="mode-media" class="controller-mode-view">
+          
+          <!-- Media Subtabs Switcher -->
+          <div class="media-subtabs">
+            <button class="media-subtab active" data-subtab="yt" id="tab-yt">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5.2 3-5.2 3z"/></svg>
+              <span>YOUTUBE</span>
+            </button>
+            <button class="media-subtab" data-subtab="spotify" id="tab-spotify">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.59 14.42c-.18.3-.56.4-.86.22-2.35-1.44-5.31-1.76-8.8-1-.34.08-.68-.14-.76-.48-.08-.34.14-.68.48-.76 3.82-.87 7.1-.51 9.72 1.16.3.18.4.56.22.86zm1.22-2.72c-.23.37-.71.49-1.08.26-2.69-1.66-6.8-2.14-9.98-1.17-.41.12-.85-.12-.97-.53-.12-.41.12-.85.53-.97 3.63-1.1 8.18-.57 11.24 1.33.37.23.49.71.26 1.08zm.11-2.83C14.7 8.98 9.4 8.81 6.34 9.74c-.49.15-1.02-.13-1.17-.62-.15-.49.13-1.02.62-1.17 3.53-1.07 9.38-.87 13.09 1.33.44.26.58.84.32 1.28-.26.44-.84.58-1.28.31z"/></svg>
+              <span>SPOTIFY</span>
+            </button>
+          </div>
+
+          <!-- YOUTUBE PANEL -->
+          <div id="media-panel-yt" class="media-panel active">
+            <button class="launcher-cta-btn" id="btn-yt-launch">
+              <div class="cta-left">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                <span class="cta-text">OPEN YOUTUBE IN BROWSER</span>
+              </div>
+              <span class="cta-arrow">-&gt;</span>
+            </button>
+
+            <div class="yt-search-box">
+              <input type="text" id="yt-search-input" placeholder="SEARCH YOUTUBE VIDEO..." autocomplete="off">
+              <button id="btn-yt-search" class="yt-search-btn">SEARCH</button>
+            </div>
+
+            <div class="media-hero-card">
+              <div class="hero-top-row">
+                <button class="media-ctrl-btn sec-btn" id="btn-yt-prev">PREV</button>
+                <button class="media-ctrl-btn main-play-btn" id="btn-yt-play">PLAY / PAUSE</button>
+                <button class="media-ctrl-btn sec-btn" id="btn-yt-next">NEXT</button>
+              </div>
+              <div class="hero-seek-row">
+                <button class="seek-btn" id="btn-yt-seek-b10">-10S</button>
+                <button class="seek-btn" id="btn-yt-seek-b5">-5S</button>
+                <button class="seek-btn" id="btn-yt-seek-f5">+5S</button>
+                <button class="seek-btn" id="btn-yt-seek-f10">+10S</button>
+              </div>
+            </div>
+
+            <div class="media-section-card">
+              <div class="section-title">SPEED</div>
+              <div class="speed-presets-row">
+                <button class="speed-btn" id="btn-yt-speed-down">SLOWER (&lt;)</button>
+                <button class="speed-btn" id="btn-yt-speed-up">FASTER (&gt;)</button>
+              </div>
+            </div>
+
+            <div class="media-section-card">
+              <div class="section-title">DISPLAY & AUDIO</div>
+              <div class="grid-controls-row">
+                <button class="grid-btn" id="btn-yt-fullscreen">FULLSCREEN (F)</button>
+                <button class="grid-btn" id="btn-yt-theater">THEATER (T)</button>
+                <button class="grid-btn" id="btn-yt-miniplayer">MINI (I)</button>
+                <button class="grid-btn" id="btn-yt-cc">CAPTIONS (C)</button>
+                <button class="grid-btn" id="btn-yt-vol-up">VOL +</button>
+                <button class="grid-btn" id="btn-yt-vol-down">VOL -</button>
+                <button class="grid-btn" id="btn-yt-mute">MUTE (M)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPOTIFY PANEL -->
+          <div id="media-panel-spotify" class="media-panel">
+            <button class="launcher-cta-btn" id="btn-spotify-launch">
+              <div class="cta-left">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                <span class="cta-text">LAUNCH SPOTIFY APP</span>
+              </div>
+              <span class="cta-arrow">-&gt;</span>
+            </button>
+
+            <div class="media-hero-card">
+              <div class="hero-top-row">
+                <button class="media-ctrl-btn sec-btn" id="btn-spotify-prev">PREV</button>
+                <button class="media-ctrl-btn main-play-btn" id="btn-spotify-play">PLAY / PAUSE</button>
+                <button class="media-ctrl-btn sec-btn" id="btn-spotify-next">NEXT</button>
+              </div>
+              <div class="hero-seek-row">
+                <button class="seek-btn" id="btn-spotify-seek-back">-5S</button>
+                <button class="seek-btn" id="btn-spotify-seek-fwd">+5S</button>
+              </div>
+            </div>
+
+            <div class="media-section-card">
+              <div class="section-title">PLAYBACK MODE</div>
+              <div class="speed-presets-row">
+                <button class="spotify-mode-btn" id="btn-spotify-shuffle">SHUFFLE</button>
+                <button class="spotify-mode-btn" id="btn-spotify-repeat">REPEAT</button>
+                <button class="spotify-mode-btn" id="btn-spotify-like">LIKE SONG</button>
+              </div>
+            </div>
+
+            <div class="media-section-card">
+              <div class="section-title">VOLUME</div>
+              <div class="speed-presets-row">
+                <button class="spotify-mode-btn" id="btn-spotify-vol-up">VOL +</button>
+                <button class="spotify-mode-btn" id="btn-spotify-vol-down">VOL -</button>
+                <button class="spotify-mode-btn" id="btn-spotify-mute">MUTE</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 4. CONSOLE GAMEPAD MODE                        -->
+        <!-- ============================================== -->
+        <section id="mode-gamepad" class="controller-mode-view">
+          <div class="gamepad-container">
+            
+            <!-- Top Shoulder Triggers -->
+            <div class="gamepad-shoulders">
+              <div class="shoulder-group left-shoulder">
+                <button class="gp-shoulder-btn" id="gp-btn-lt" data-btn="lt">
+                  <span>LT</span>
+                  <div class="trigger-bar"><div class="trigger-fill" id="lt-gauge"></div></div>
+                </button>
+                <button class="gp-shoulder-btn" id="gp-btn-lb" data-btn="lb"><span>LB</span></button>
+              </div>
+
+              <!-- Center Navigation Controls -->
+              <div class="gamepad-center">
+                <button class="gp-center-btn" id="gp-btn-select" data-btn="select">BACK</button>
+                <button class="gp-center-btn" id="gp-btn-home" data-btn="home">WIN</button>
+                <button class="gp-center-btn" id="gp-btn-start" data-btn="start">START</button>
+                <button class="gp-center-btn" id="gp-btn-gyro" data-btn="gyro">GYRO</button>
+              </div>
+
+              <div class="shoulder-group right-shoulder">
+                <button class="gp-shoulder-btn" id="gp-btn-rb" data-btn="rb"><span>RB</span></button>
+                <button class="gp-shoulder-btn" id="gp-btn-rt" data-btn="rt">
+                  <span>RT</span>
+                  <div class="trigger-bar"><div class="trigger-fill" id="rt-gauge"></div></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Main Dual Pods Area -->
+            <div class="gamepad-main-area">
+              
+              <!-- Left Control Pod: Left Stick (Movement) + D-Pad -->
+              <div class="control-pod left-pod">
+                <div class="joystick-zone" id="joystick-left-zone">
+                  <div class="joystick-base" id="stick-left-base">
+                    <div class="stick-axis-cross"></div>
+                    <div class="joystick-nipple" id="stick-left-nipple">
+                      <div class="nipple-core"></div>
+                      <span class="stick-label">L3</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dpad-cluster">
+                  <button class="dpad-btn dpad-up" data-btn="dpad_up"><span>U</span></button>
+                  <div class="dpad-middle-row">
+                    <button class="dpad-btn dpad-left" data-btn="dpad_left"><span>L</span></button>
+                    <div class="dpad-center-hub"></div>
+                    <button class="dpad-btn dpad-right" data-btn="dpad_right"><span>R</span></button>
+                  </div>
+                  <button class="dpad-btn dpad-down" data-btn="dpad_down"><span>D</span></button>
+                </div>
+              </div>
+
+              <!-- Right Control Pod: ABXY Cluster + Right Analog Stick (Aim) -->
+              <div class="control-pod right-pod">
+                <div class="abxy-cluster">
+                  <button class="action-btn abxy-y" data-btn="y"><span>Y</span></button>
+                  <div class="abxy-middle-row">
+                    <button class="action-btn abxy-x" data-btn="x"><span>X</span></button>
+                    <button class="action-btn abxy-b" data-btn="b"><span>B</span></button>
+                  </div>
+                  <button class="action-btn abxy-a" data-btn="a"><span>A</span></button>
+                </div>
+
+                <div class="joystick-zone" id="joystick-right-zone">
+                  <div class="joystick-base" id="stick-right-base">
+                    <div class="stick-axis-cross"></div>
+                    <div class="joystick-nipple" id="stick-right-nipple">
+                      <div class="nipple-core"></div>
+                      <span class="stick-label">R3</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <!-- STREAMLINED 4-MODE BOTTOM DOCK (ZERO OVERFLOW) -->
+      <footer id="bottom-dock">
+        <nav id="dock-nav">
+          <button class="dock-item active" data-mode="touchpad" id="dock-tab-touchpad">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-4h16v4zm0-6H4V6h16v6z"/></svg>
+            <span class="dock-label">TRACKPAD</span>
+          </button>
+          <button class="dock-item" data-mode="screen" id="dock-tab-screen">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.11-.9-2-2-2H4c-1.11 0-2 .89-2 2v10c0 1.1.89 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+            <span class="dock-label">SCREEN</span>
+          </button>
+          <button class="dock-item" data-mode="media" id="dock-tab-media">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            <span class="dock-label">MEDIA</span>
+          </button>
+          <button class="dock-item" data-mode="gamepad" id="dock-tab-gamepad">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H9v2H7v-2H5v-2h2V9h2v2h2v2zm4.5 1c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+            <span class="dock-label">GAMEPAD</span>
+          </button>
+        </nav>
+      </footer>
+
+      <!-- ============================================== -->
+      <!-- SECURITY PIN LOCK OVERLAY MODAL                -->
+      <!-- ============================================== -->
+      <div id="pin-lock-modal" class="modal-overlay hidden">
+        <div class="modal-card pin-card">
+          <div class="modal-header">
+            <div class="pin-title-group">
+              <div class="logo-badge">R4</div>
+              <h3>SECURITY PIN REQUIRED</h3>
+            </div>
+          </div>
+          <div class="modal-body">
+            <p class="pin-desc">Enter the 4-digit PIN displayed on your PC Companion GUI to authorize this device.</p>
+            
+            <div class="pin-display-box" id="pin-dots-container">
+              <span class="pin-dot" id="pdot-0"></span>
+              <span class="pin-dot" id="pdot-1"></span>
+              <span class="pin-dot" id="pdot-2"></span>
+              <span class="pin-dot" id="pdot-3"></span>
+            </div>
+
+            <div id="pin-error-alert" class="pin-alert-msg hidden">INVALID PIN. PLEASE TRY AGAIN.</div>
+
+            <!-- Numeric Keypad -->
+            <div class="keypad-grid">
+              <button class="keypad-btn" data-num="1">1</button>
+              <button class="keypad-btn" data-num="2">2</button>
+              <button class="keypad-btn" data-num="3">3</button>
+              <button class="keypad-btn" data-num="4">4</button>
+              <button class="keypad-btn" data-num="5">5</button>
+              <button class="keypad-btn" data-num="6">6</button>
+              <button class="keypad-btn" data-num="7">7</button>
+              <button class="keypad-btn" data-num="8">8</button>
+              <button class="keypad-btn" data-num="9">9</button>
+              <button class="keypad-btn" id="btn-pin-qr-scan">SCAN</button>
+              <button class="keypad-btn" data-num="0">0</button>
+              <button class="keypad-btn" id="btn-pin-backspace">DEL</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- CAMERA QR CODE SCANNER MODAL                   -->
+      <!-- ============================================== -->
+      <div id="qr-scanner-modal" class="modal-overlay hidden">
+        <div class="modal-card scanner-card">
+          <div class="modal-header">
+            <h3>SCAN DESKTOP QR CODE</h3>
+            <button id="btn-close-scanner" class="btn-icon">X</button>
+          </div>
+          <div class="scanner-body">
+            <div class="camera-viewport-wrapper">
+              <video id="qr-video" playsinline></video>
+              <canvas id="qr-canvas" style="display:none;"></canvas>
+              <div class="scanner-aiming-reticle">
+                <div class="reticle-corner corner-tl"></div>
+                <div class="reticle-corner corner-tr"></div>
+                <div class="reticle-corner corner-bl"></div>
+                <div class="reticle-corner corner-br"></div>
+                <div class="reticle-laser"></div>
+              </div>
+            </div>
+            <div id="scanner-status-text" class="scanner-status-hint">POINT CAMERA AT PC SCREEN QR CODE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS MODAL -->
+      <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>SETTINGS</h3>
+            <button id="btn-close-settings" class="btn-icon">X</button>
+          </div>
+          <div class="modal-body">
+            <div class="setting-group">
+              <label>TOUCHPAD SENSITIVITY</label>
+              <input type="range" id="setting-sensitivity" min="0.5" max="3.0" step="0.1" value="1.2">
+              <span id="val-sensitivity" class="setting-val">1.2X</span>
+            </div>
+            <div class="setting-group">
+              <label>JOYSTICK DEADZONE</label>
+              <input type="range" id="setting-deadzone" min="0.05" max="0.4" step="0.05" value="0.15">
+              <span id="val-deadzone" class="setting-val">15%</span>
+            </div>
+            <div class="setting-group" style="margin-top: 10px;">
+              <button id="btn-reset-auth" class="modal-full-btn">RE-AUTHENTICATE PIN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/touchpad.js"></script>
+  <script src="js/screen.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/gamepad.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
