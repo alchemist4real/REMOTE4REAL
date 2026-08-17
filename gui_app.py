@@ -859,20 +859,13 @@ class Remote4RealDesktopGUI:
             command=lambda: self.server.ring_desktop_alarm() if hasattr(self.server, 'ring_desktop_alarm') else None
         )
         btn_radar_pc_chime.pack(side=tk.RIGHT)
+        self._init_radar_canvas_elements()
 
-    def _start_radar_animation(self):
-        def _anim():
-            self.radar_sweep_angle = (self.radar_sweep_angle + 3.5) % 360
-            self._draw_radar_compass()
-            self.root.after(40, _anim)
-        self.root.after(100, _anim)
-
-    def _draw_radar_compass(self):
+    def _init_radar_canvas_elements(self):
         if not hasattr(self, 'radar_canvas'):
             return
         cv = self.radar_canvas
         cv.delete("all")
-
         cx, cy, r = 100, 100, 88
 
         # 1. Concentric Range Rings
@@ -889,24 +882,40 @@ class Remote4RealDesktopGUI:
         cv.create_text(cx + r - 10, cy, text="E", fill="#666677", font=("Courier New", 8, "bold"))
         cv.create_text(cx - r + 10, cy, text="W", fill="#666677", font=("Courier New", 8, "bold"))
 
-        # 4. Sweeping Radar Beam
+        # 4. Dynamic Elements (Stored IDs for Zero-GC 60fps Updates)
+        self.radar_sweep_line = cv.create_line(cx, cy, cx, cy - r, fill="#34c759", width=2)
+        self.radar_needle_line = cv.create_line(cx, cy, cx, cy - (r * 0.78), fill="#ffffff", width=3)
+        self.radar_target_dot = cv.create_oval(cx - 5, cy - (r * 0.78) - 5, cx + 5, cy - (r * 0.78) + 5, fill="#34c759", outline="#ffffff", width=2)
+        self.radar_pivot = cv.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ffffff", outline="#000000", width=1)
+
+    def _start_radar_animation(self):
+        def _anim():
+            try:
+                self.radar_sweep_angle = (self.radar_sweep_angle + 4.0) % 360
+                self._draw_radar_compass()
+            except Exception:
+                pass
+            self.root.after(33, _anim)
+        self.root.after(200, _anim)
+
+    def _draw_radar_compass(self):
+        if not hasattr(self, 'radar_canvas') or not hasattr(self, 'radar_sweep_line'):
+            return
+        cv = self.radar_canvas
+        cx, cy, r = 100, 100, 88
+
+        # 1. Update Sweeping Radar Beam coords
         sweep_rad = math.radians(self.radar_sweep_angle)
         sx = cx + r * math.sin(sweep_rad)
         sy = cy - r * math.cos(sweep_rad)
-        cv.create_line(cx, cy, sx, sy, fill="#34c759", width=2)
+        cv.coords(self.radar_sweep_line, cx, cy, sx, sy)
 
-        # 5. Directional Target Needle (Points to Phone)
+        # 2. Update Directional Target Needle coords
         t_rad = math.radians(self.target_phone_bearing)
         nx = cx + (r * 0.78) * math.sin(t_rad)
         ny = cy - (r * 0.78) * math.cos(t_rad)
-
-        # Needle Body
-        cv.create_line(cx, cy, nx, ny, fill="#ffffff", width=3)
-        # Target Arrow Head / Dot
-        cv.create_oval(nx - 5, ny - 5, nx + 5, ny + 5, fill="#34c759", outline="#ffffff", width=2)
-
-        # Center Pivot
-        cv.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ffffff", outline="#000000", width=1)
+        cv.coords(self.radar_needle_line, cx, cy, nx, ny)
+        cv.coords(self.radar_target_dot, nx - 5, ny - 5, nx + 5, ny + 5)
 
     # ==========================================
     # 4. SCAN LOCAL WI-FI DEVICES & PAIRING REQUEST TAB

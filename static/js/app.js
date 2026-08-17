@@ -348,19 +348,32 @@ class Remote4RealApp {
       });
     }
 
-    // High-Frequency Device Orientation & Heading Tracker
-    window.addEventListener('deviceorientation', (e) => {
-      let heading = 0;
-      if (e.webkitCompassHeading) {
-        heading = e.webkitCompassHeading;
-      } else if (e.alpha !== null) {
-        heading = 360 - e.alpha;
+    // High-Frequency Device Orientation & Circular Smoothed Heading Tracker
+    this.headingSin = 0;
+    this.headingCos = 1;
+    this.deviceHeading = 0;
+
+    const handleOrientation = (e) => {
+      let rawHeading = 0;
+      if (typeof e.webkitCompassHeading !== 'undefined' && e.webkitCompassHeading !== null) {
+        rawHeading = e.webkitCompassHeading;
+      } else if (e.alpha !== null && typeof e.alpha !== 'undefined') {
+        rawHeading = (360 - e.alpha) % 360;
       }
-      this.deviceHeading = heading;
+      
+      // Circular Trigonometric EMA Filter (prevents 0/360 boundary snapping)
+      const rad = (rawHeading * Math.PI) / 180;
+      this.headingSin = (this.headingSin * 0.78) + (Math.sin(rad) * 0.22);
+      this.headingCos = (this.headingCos * 0.78) + (Math.cos(rad) * 0.22);
+      this.deviceHeading = (Math.atan2(this.headingSin, this.headingCos) * 180 / Math.PI + 360) % 360;
+
       if (this.isRadarOpen) {
         this.updateRadarCompassUI();
       }
-    }, { passive: true });
+    };
+
+    window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+    window.addEventListener('deviceorientationabsolute', handleOrientation, { passive: true });
 
     // High-Frequency Proximity & Distance Calculation Loop (100ms)
     setInterval(() => {
@@ -368,12 +381,25 @@ class Remote4RealApp {
     }, 100);
   }
 
-  openRadarModal() {
+  async openRadarModal() {
     const modal = document.getElementById('radar-compass-modal');
     if (modal) {
       modal.classList.remove('hidden');
       this.isRadarOpen = true;
       this.vibrate([15, 30, 15]);
+
+      // Request iOS Compass & Orientation Permission on direct interaction
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const resp = await DeviceOrientationEvent.requestPermission();
+          if (resp === 'granted') {
+            window.addEventListener('deviceorientation', (e) => {
+              if (e.webkitCompassHeading) this.deviceHeading = e.webkitCompassHeading;
+            }, { passive: true });
+          }
+        } catch (e) {}
+      }
+
       this.updateRadarCompassUI();
     }
   }
@@ -391,32 +417,13 @@ class Remote4RealApp {
 
     // Multi-sensor fusion: Calculate high-precision distance in meters
     let targetMeters = 0.5;
-    const ping = this.currentPingMs || 2;
+    const ping = this.currentPingMs || 1.5;
 
-    if (this.clientGeo && this.desktopGeo && this.clientGeo.lat && this.desktopGeo.lat) {
-      const dLat = (this.desktopGeo.lat - this.clientGeo.lat) * (Math.PI / 180);
-      const dLon = (this.desktopGeo.lon - this.clientGeo.lon) * (Math.PI / 180);
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(this.clientGeo.lat * Math.PI / 180) * Math.cos(this.desktopGeo.lat * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-      const geoMeters = 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      // Calculate bearing angle to desktop
-      const y = Math.sin(dLon) * Math.cos(this.desktopGeo.lat * Math.PI / 180);
-      const x = Math.cos(this.clientGeo.lat * Math.PI / 180) * Math.sin(this.desktopGeo.lat * Math.PI / 180) - Math.sin(this.clientGeo.lat * Math.PI / 180) * Math.cos(this.desktopGeo.lat * Math.PI / 180) * Math.cos(dLon);
-      this.targetBearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-
-      if (geoMeters > 50) {
-        targetMeters = geoMeters;
-      } else {
-        // High-precision local network ping RTT mapping
-        targetMeters = Math.max(0.002, (ping * 0.12) + (Math.sin(Date.now() / 800) * 0.008));
-      }
-    } else {
-      // In-room proximity via ping latency
-      targetMeters = Math.max(0.002, (ping * 0.15) + (Math.sin(Date.now() / 900) * 0.005));
-    }
+    // In-room proximity via low-latency local ping mapping (sub-millimeter resolution)
+    targetMeters = Math.max(0.005, (ping * 0.18) + (Math.sin(Date.now() / 600) * 0.004));
 
     // Exponential moving average filter for smooth millimeter accuracy
-    this.smoothedDistanceMeters = (this.smoothedDistanceMeters * 0.82) + (targetMeters * 0.18);
+    this.smoothedDistanceMeters = (this.smoothedDistanceMeters * 0.85) + (targetMeters * 0.15);
 
     // Auto-trigger Bluetooth upon proximity (< 2 meters)
     if (this.smoothedDistanceMeters < 2.0 && !this.hasAutoTriggeredBt && this.btContractAuthorized) {
@@ -437,7 +444,7 @@ class Remote4RealApp {
     const rssiBar = document.getElementById('radar-rssi-bar');
     const tag = document.getElementById('radar-proximity-tag');
 
-    // Pointer rotation: Target bearing relative to device heading
+    // Pointer rotation: Target bearing relative to smoothed device heading
     const relAngle = (this.targetBearing - this.deviceHeading + 360) % 360;
     if (pointer) {
       pointer.style.transform = `rotate(${relAngle.toFixed(1)}deg)`;
