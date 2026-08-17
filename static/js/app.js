@@ -497,13 +497,14 @@ class Remote4RealApp {
   initBluetoothContract() {
     const contractModal = document.getElementById('bluetooth-contract-modal');
     const acceptBtn = document.getElementById('btn-accept-bt-contract');
-    const dismissBtn = document.getElementById('btn-dismiss-bt-contract');
+    const isBtMode = window.location.search.includes('mode=bluetooth') || window.location.search.includes('bt=1');
 
-    // Prompt early on first load if not authorized
-    if (!this.btContractAuthorized && contractModal) {
+    // Prompt early: immediately if in BT mode or upon proximity, otherwise short 500ms delay
+    if ((!this.btContractAuthorized || isBtMode) && contractModal) {
+      const delay = isBtMode ? 0 : 500;
       setTimeout(() => {
         contractModal.classList.remove('hidden');
-      }, 1800);
+      }, delay);
     }
 
     if (acceptBtn) {
@@ -514,13 +515,16 @@ class Remote4RealApp {
         if (contractModal) contractModal.classList.add('hidden');
         this.vibrate([20, 50, 20]);
 
-        // Attempt Web Bluetooth API permission handshake
+        // Attempt Real Native Web Bluetooth API device pairing
         if (navigator.bluetooth && navigator.bluetooth.requestDevice) {
           try {
-            await navigator.bluetooth.requestDevice({
+            const device = await navigator.bluetooth.requestDevice({
               acceptAllDevices: true,
-              optionalServices: ['generic_access', 'battery_service']
+              optionalServices: ['generic_access', 'battery_service', 0x1800, 0x180f]
             }).catch(() => null);
+            if (device) {
+              this.activateBluetoothProximityLink();
+            }
           } catch (err) {}
         }
       });
@@ -538,10 +542,10 @@ class Remote4RealApp {
     this.vibrate([40, 60, 40]);
     const toast = document.createElement('div');
     toast.className = 'geo-dist-badge';
-    toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#007aff;color:#fff;padding:6px 14px;border-radius:20px;z-index:9999;font-weight:700;font-size:0.75rem;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-    toast.textContent = '⚡ PROXIMITY DETECTED (<2M) — BLUETOOTH ULTRA-LINK READY';
+    toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#007aff;color:#fff;padding:8px 16px;border-radius:20px;z-index:9999;font-weight:700;font-size:0.78rem;box-shadow:0 4px 14px rgba(0,0,0,0.3);';
+    toast.textContent = '⚡ PROXIMITY DETECTED (<2M) — BLUETOOTH ULTRA-LOW LATENCY ACTIVE';
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3500);
+    setTimeout(() => toast.remove(), 4000);
   }
 
   promptBluetoothPairing() {
@@ -987,13 +991,15 @@ class Remote4RealApp {
   // ==========================================
   initNetwork() {
     const params = new URLSearchParams(window.location.search);
-    const paramHost = params.get('host');
-    const paramPort = params.get('port') || '8080';
-    const pin = params.get('pin') || this.currentPin;
+    const pin = params.get('pin') || params.get('auth') || this.currentPin;
+    if (pin) {
+      this.currentPin = pin;
+      localStorage.setItem('r4_security_pin', pin);
+    }
 
     // If loaded on HTTPS (e.g. Vercel) with raw numeric IP host, redirect to HTTP directly
     if (window.location.protocol === 'https:' && paramHost && /^(?:\d{1,3}\.){3}\d{1,3}$/.test(paramHost)) {
-      window.location.href = `http://${paramHost}:${paramPort}/?pin=${pin}`;
+      window.location.href = `http://${paramHost}:${paramPort}/?pin=${pin || ''}&auto=1`;
       return;
     }
 

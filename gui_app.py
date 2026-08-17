@@ -17,6 +17,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 import qrcode
 from PIL import Image
+import math
 
 from server import ControllerServer
 from version import __version__, __github_url__, __app_name__, __author__
@@ -595,13 +596,13 @@ class Remote4RealDesktopGUI:
 
     def update_qr_code(self):
         if self.connection_mode == "bluetooth":
-            url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}&mode=bluetooth"
-        elif self.connection_mode == "vpn" and self.selected_ip == "cloud" and self.server.international_link:
+            url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}&mode=bluetooth&bt=1&auto=1"
+        elif self.connection_mode == "vpn" and (self.selected_ip == "cloud" or not self.selected_ip) and self.server.international_link:
             url = self.server.international_link
         elif hasattr(self, 'custom_host') and self.custom_host:
-            url = f"http://{self.custom_host}:{self.server.http_port}/?pin={self.server.security_pin}"
+            url = f"http://{self.custom_host}:{self.server.http_port}/?pin={self.server.security_pin}&auto=1"
         else:
-            url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}"
+            url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}&auto=1"
 
         self.url_label.configure(text=url)
 
