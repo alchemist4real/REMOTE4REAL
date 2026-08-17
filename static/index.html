@@ -104,6 +104,7 @@
           
           <!-- Top Modifier & Shortcut Strip -->
           <div class="deck-modifier-bar">
+            <button id="btn-deck-type-toggle" class="key-chip highlight-chip" title="Toggle Phone Keyboard">⌨ TYPE</button>
             <button class="key-chip" data-combo="ctrl,c">COPY</button>
             <button class="key-chip" data-combo="ctrl,v">PASTE</button>
             <button class="key-chip" data-combo="ctrl,z">UNDO</button>
@@ -126,13 +127,13 @@
             <button class="mode-fs-pill-btn btn-trigger-fs" title="Fullscreen">⛶ FS</button>
           </div>
 
-          <!-- Native Phone Keyboard Typing Dock -->
-          <div class="deck-typing-dock">
+          <!-- Optional Phone Keyboard Typing Dock (Hidden by default to prevent unwanted keyboard popup) -->
+          <div class="deck-typing-dock hidden" id="deck-typing-dock-container">
             <div class="typing-dock-inner">
-              <input type="text" id="deck-native-input" placeholder="TYPE OR USE VOICE INPUT..." autocomplete="off" autocapitalize="off" spellcheck="false">
+              <input type="text" id="deck-native-input" placeholder="TYPE INTO ACTIVE WINDOW..." autocomplete="off" autocapitalize="off" spellcheck="false">
               <button id="btn-deck-bksp" class="deck-bksp-btn" title="Backspace (Hold to repeat)">⌫</button>
               <button id="btn-deck-send" class="deck-action-btn" title="Submit">OK</button>
-              <button id="btn-deck-clear" class="deck-clear-btn" title="Clear / Double-tap Erase PC">CLR</button>
+              <button id="btn-deck-clear" class="deck-clear-btn" title="Close Keyboard">✕</button>
             </div>
           </div>
 

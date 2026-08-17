@@ -17,6 +17,7 @@ class TouchpadController {
     this.initTouchpadEvents();
     this.initMouseButtons();
     this.initModifierChips();
+    this.initTypingDockToggle();
   }
 
   // ==========================================
@@ -27,6 +28,11 @@ class TouchpadController {
 
     this.touchpad.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      // Dismiss any open software keyboard immediately
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+        document.activeElement.blur();
+      }
+
       const now = Date.now();
       const numTouches = e.touches.length;
 
@@ -211,6 +217,42 @@ class TouchpadController {
     bindButton('mouse-btn-left', 'left');
     bindButton('mouse-btn-middle', 'middle');
     bindButton('mouse-btn-right', 'right');
+  }
+
+  // ==========================================
+  // 5. ON-DEMAND TYPING DOCK TOGGLE
+  // ==========================================
+  initTypingDockToggle() {
+    const toggleBtn = document.getElementById('btn-deck-type-toggle');
+    const dockContainer = document.getElementById('deck-typing-dock-container');
+    const closeBtn = document.getElementById('btn-deck-clear');
+    const inputEl = document.getElementById('deck-native-input');
+
+    if (toggleBtn && dockContainer) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = !dockContainer.classList.contains('hidden');
+        dockContainer.classList.toggle('hidden', isOpen);
+        toggleBtn.classList.toggle('active', !isOpen);
+
+        if (!isOpen && inputEl) {
+          setTimeout(() => inputEl.focus(), 60);
+        } else if (inputEl) {
+          inputEl.blur();
+        }
+        if (window.app && window.app.vibrate) window.app.vibrate(10);
+      });
+    }
+
+    if (closeBtn && dockContainer) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        dockContainer.classList.add('hidden');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (inputEl) inputEl.blur();
+        if (window.app && window.app.vibrate) window.app.vibrate(8);
+      });
+    }
   }
 }
 

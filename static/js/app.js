@@ -58,8 +58,8 @@ class Remote4RealApp {
   }
 
   async detectClientGeolocation() {
+    // 1. Instant IP-based baseline location
     try {
-      // 1. Fetch IP Geolocation (Fast & zero-auth)
       const res = await fetch('http://ip-api.com/json/?fields=status,country,countryCode,regionName,city,lat,lon,timezone', { cache: 'no-cache' }).catch(() => null);
       if (res && res.ok) {
         const data = await res.json();
@@ -74,29 +74,76 @@ class Remote4RealApp {
             flag: flag,
             lat: data.lat,
             lon: data.lon,
-            timezone: data.timezone || ''
+            timezone: data.timezone || '',
+            accuracy: null
           };
           this.updateGeoUI();
-          return;
         }
       }
     } catch (e) {
       // Fallback
     }
 
-    // 2. Timezone-based fallback if offline / direct LAN
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    const city = tz.includes('/') ? tz.split('/')[1].replace(/_/g, ' ') : 'Local Device';
-    this.clientGeo = {
-      city: city,
-      country: 'Local Network',
-      countryCode: '',
-      flag: '📍',
-      lat: null,
-      lon: null,
-      timezone: tz
-    };
-    this.updateGeoUI();
+    // 2. High-Accuracy Real-Time GPS / Hardware Geolocation Watcher
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const accuracy = Math.round(pos.coords.accuracy);
+
+          // Reverse Geocode sub-district / city
+          try {
+            const revRes = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+              { cache: 'no-cache' }
+            ).catch(() => null);
+
+            let locName = this.clientGeo.city;
+            let countryName = this.clientGeo.country;
+            let cc = this.clientGeo.countryCode;
+            let flag = this.clientGeo.flag;
+
+            if (revRes && revRes.ok) {
+              const geoData = await revRes.json();
+              cc = geoData.countryCode || cc;
+              if (cc && cc.length === 2) {
+                flag = String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0)));
+              }
+              const locality = geoData.locality || geoData.city || geoData.principalSubdivision;
+              if (locality) locName = locality;
+              if (geoData.countryName) countryName = geoData.countryName;
+            }
+
+            this.clientGeo = {
+              city: `${locName}`,
+              district: locName,
+              region: this.clientGeo.region,
+              country: countryName,
+              countryCode: cc,
+              flag: flag,
+              lat: lat,
+              lon: lon,
+              accuracy: accuracy
+            };
+            this.updateGeoUI();
+
+            // Real-time sync to Desktop Server
+            if (this.isAuthenticated) {
+              this.send({
+                t: 'client_geo',
+                geo: this.clientGeo,
+                device_name: this.deviceName
+              });
+            }
+          } catch (e) {}
+        },
+        (err) => {
+          // Keep IP geolocation baseline
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 2000 }
+      );
+    }
   }
 
   updateGeoUI(distanceKm = null) {
@@ -105,7 +152,8 @@ class Remote4RealApp {
     const distEl = document.getElementById('geo-distance-text');
 
     if (clientLocEl) {
-      const cStr = `${this.clientGeo.city}${this.clientGeo.country ? ', ' + this.clientGeo.country : ''} ${this.clientGeo.flag}`;
+      const accStr = this.clientGeo.accuracy ? ` (±${this.clientGeo.accuracy}m)` : '';
+      const cStr = `${this.clientGeo.city}${this.clientGeo.country ? ', ' + this.clientGeo.country : ''} ${this.clientGeo.flag}${accStr}`;
       clientLocEl.textContent = cStr.trim();
     }
 
@@ -116,7 +164,7 @@ class Remote4RealApp {
 
     if (distEl) {
       if (distanceKm !== null && distanceKm > 0) {
-        distEl.textContent = `⚡ ${Math.round(distanceKm).toLocaleString()} KM DISTANCE`;
+        distEl.textContent = `⚡ ${distanceKm >= 10 ? Math.round(distanceKm).toLocaleString() : distanceKm.toFixed(1)} KM DISTANCE`;
       } else if (this.isConnected) {
         distEl.textContent = `⚡ DIRECT LOW-LATENCY LINK`;
       } else {
