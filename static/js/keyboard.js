@@ -226,22 +226,15 @@ class KeyboardController {
         }
       }
 
-      // 5. SEND BUTTON
+      // 5. SEND BUTTON (Dispatches Enter to submit active field & clears dock)
       if (sendId) {
         const sendBtn = document.getElementById(sendId);
         if (sendBtn) {
           const handleSend = (e) => {
             e.preventDefault();
-            const val = inputEl.value.replace(/\u200B/g, '');
-            if (val) {
-              if (window.app && window.app.send) {
-                window.app.send({ t: 'type_text', text: val });
-                window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-              }
-            } else {
-              if (window.app && window.app.send) {
-                window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-              }
+            // Keystrokes are already streamed in real-time. Only send Enter to submit.
+            if (window.app && window.app.send) {
+              window.app.send({ t: 'key', k: 'enter', act: 'tap' });
             }
             inputEl.value = this.SENTINEL;
             lastVal = this.SENTINEL;
