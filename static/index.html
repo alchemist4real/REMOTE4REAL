@@ -364,10 +364,14 @@
           
           <!-- Screen Mirror Floating HUD Toolbar -->
           <div class="screen-floating-toolbar">
-            <button id="btn-screen-fit" class="screen-tool-btn active">FIT</button>
-            <button id="btn-screen-fill" class="screen-tool-btn">FILL</button>
-            <button id="btn-screen-reconnect" class="screen-tool-btn">RECONNECT</button>
-            <button class="screen-tool-btn btn-trigger-fs">⛶ FULLSCREEN</button>
+            <button id="btn-screen-fit" class="screen-tool-btn active" title="Fit to Screen">FIT</button>
+            <button id="btn-screen-zoom" class="screen-tool-btn" title="2x Precision Zoom">ZOOM</button>
+            <button id="btn-screen-rclick" class="screen-tool-btn" title="Right-Click Mode">R-CLICK</button>
+            <button id="btn-screen-keyboard-toggle" class="screen-tool-btn" title="Toggle On-Screen Keyboard">⌨ TYPE</button>
+            <button class="screen-tool-btn key-chip" data-key="win" title="Windows Start Key">WIN</button>
+            <button class="screen-tool-btn key-chip" data-key="esc" title="Escape Key">ESC</button>
+            <button id="btn-screen-reconnect" class="screen-tool-btn" title="Reconnect Stream">SYNC</button>
+            <button class="screen-tool-btn btn-trigger-fs" title="Fullscreen">⛶ FS</button>
             <span id="screen-fps-counter" class="screen-fps-badge">0 FPS</span>
           </div>
 
@@ -377,6 +381,16 @@
             <div id="screen-loading-spinner" class="screen-spinner-overlay">
               <div class="spinner"></div>
               <span>STREAMING PC SCREEN...</span>
+            </div>
+          </div>
+
+          <!-- Slide-Up Screen Typing Dock -->
+          <div id="screen-typing-dock" class="screen-dock-slider hidden">
+            <div class="typing-dock-inner">
+              <input type="text" id="screen-native-input" placeholder="TYPE INTO ACTIVE WINDOW..." autocomplete="off" autocapitalize="off" spellcheck="false">
+              <button id="btn-screen-bksp" class="deck-bksp-btn" title="Backspace (Hold to repeat)">⌫</button>
+              <button id="btn-screen-send" class="deck-action-btn" title="Submit">OK</button>
+              <button id="btn-screen-close-dock" class="deck-clear-btn" title="Close Keyboard">✕</button>
             </div>
           </div>
         </section>

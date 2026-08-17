@@ -31,6 +31,7 @@ class KeyboardController {
       { inputId: 'deck-native-input', sendId: 'btn-deck-send', clearId: 'btn-deck-clear', bkspId: 'btn-deck-bksp' },
       { inputId: 'keyboard-native-input', sendId: 'btn-keyboard-send', clearId: 'btn-keyboard-clear', bkspId: 'btn-keyboard-bksp' },
       { inputId: 'keypad-native-input', sendId: 'btn-keypad-send', clearId: 'btn-keypad-clear', bkspId: 'btn-keypad-bksp' },
+      { inputId: 'screen-native-input', sendId: 'btn-screen-send', clearId: null, bkspId: 'btn-screen-bksp' },
       { inputId: 'native-keyboard-bridge', sendId: null, clearId: null, bkspId: null },
       { inputId: 'native-live-input', sendId: null, clearId: null, bkspId: null }
     ];
