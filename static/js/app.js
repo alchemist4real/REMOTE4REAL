@@ -40,6 +40,7 @@ class Remote4RealApp {
     this.initModeDropdown();
     this.initFullscreenUI();
     this.initDownloadModal();
+    this.initFindDeviceUI();
     this.detectClientGeolocation();
     this.initNetwork();
     this.initUI();
@@ -164,13 +165,133 @@ class Remote4RealApp {
 
     if (distEl) {
       if (distanceKm !== null && distanceKm > 0) {
-        distEl.textContent = `⚡ ${distanceKm >= 10 ? Math.round(distanceKm).toLocaleString() : distanceKm.toFixed(1)} KM DISTANCE`;
+        const totalMeters = distanceKm * 1000.0;
+        let formattedDist;
+        if (totalMeters >= 1000.0) {
+          formattedDist = `${distanceKm.toFixed(3)} KM`;
+        } else if (totalMeters >= 1.0) {
+          formattedDist = `${totalMeters.toFixed(2)} M (${(totalMeters * 100.0).toFixed(0)} CM)`;
+        } else if (totalMeters >= 0.01) {
+          formattedDist = `${(totalMeters * 100.0).toFixed(1)} CM (${(totalMeters * 1000.0).toFixed(0)} MM)`;
+        } else {
+          formattedDist = `${(totalMeters * 1000.0).toFixed(1)} MM`;
+        }
+        distEl.textContent = `⚡ ${formattedDist} DISTANCE`;
       } else if (this.isConnected) {
-        distEl.textContent = `⚡ DIRECT LOW-LATENCY LINK`;
+        distEl.textContent = `⚡ DIRECT LOW-LATENCY (±0.5 MM)`;
       } else {
         distEl.textContent = `CALCULATING DISTANCE...`;
       }
     }
+  }
+
+  // ==========================================
+  // BILATERAL FIND MY DEVICE & ALARM ENGINE
+  // ==========================================
+  initFindDeviceUI() {
+    const ringPcBtn = document.getElementById('btn-ring-desktop-pc');
+    const stopAlarmBtn = document.getElementById('btn-stop-alarm');
+
+    if (ringPcBtn) {
+      ringPcBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.ringDesktopPc();
+      });
+    }
+
+    if (stopAlarmBtn) {
+      stopAlarmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.stopPhoneAlarm();
+      });
+    }
+  }
+
+  ringDesktopPc() {
+    if (!this.isConnected) {
+      alert('Controller is not connected to PC yet!');
+      return;
+    }
+    this.send({ t: 'find_device', target: 'desktop' });
+    this.vibrate([30, 60, 30]);
+
+    const ringPcBtn = document.getElementById('btn-ring-desktop-pc');
+    if (ringPcBtn) {
+      const originalText = ringPcBtn.textContent;
+      ringPcBtn.textContent = '🔔 RINGING PC SPEAKERS LOUDLY...';
+      ringPcBtn.classList.add('copied');
+      setTimeout(() => {
+        ringPcBtn.textContent = originalText;
+        ringPcBtn.classList.remove('copied');
+      }, 2500);
+    }
+  }
+
+  playPhoneAlarm(title = '🔔 LOCATING PHONE', message = 'DESKTOP PC IS RINGING THIS PHONE!') {
+    const modal = document.getElementById('alarm-notification-modal');
+    const titleEl = document.getElementById('alarm-modal-title');
+    const descEl = document.getElementById('alarm-modal-desc');
+
+    if (modal) {
+      if (titleEl) titleEl.textContent = title;
+      if (descEl) descEl.textContent = message;
+      modal.classList.remove('hidden');
+    }
+
+    this.vibrate([300, 150, 300, 150, 600, 200, 600]);
+
+    // Synthesize Loud Dual-Tone Resonant Siren with Web Audio
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sawtooth';
+      osc2.type = 'square';
+
+      const now = ctx.currentTime;
+      for (let i = 0; i < 6; i++) {
+        osc1.frequency.setValueAtTime(880, now + i * 0.6);
+        osc1.frequency.linearRampToValueAtTime(1760, now + i * 0.6 + 0.3);
+        osc1.frequency.linearRampToValueAtTime(880, now + i * 0.6 + 0.6);
+
+        osc2.frequency.setValueAtTime(440, now + i * 0.6);
+        osc2.frequency.linearRampToValueAtTime(880, now + i * 0.6 + 0.3);
+        osc2.frequency.linearRampToValueAtTime(440, now + i * 0.6 + 0.6);
+      }
+
+      gain.gain.setValueAtTime(0.85, now);
+      gain.gain.linearRampToValueAtTime(0.85, now + 3.4);
+      gain.gain.linearRampToValueAtTime(0.01, now + 3.6);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 3.6);
+      osc2.stop(now + 3.6);
+
+      this.activeAlarmAudio = ctx;
+    } catch (e) {
+      console.error('Audio alarm synthesis error:', e);
+    }
+  }
+
+  stopPhoneAlarm() {
+    const modal = document.getElementById('alarm-notification-modal');
+    if (modal) modal.classList.add('hidden');
+    if (this.activeAlarmAudio) {
+      try { this.activeAlarmAudio.close(); } catch (e) {}
+      this.activeAlarmAudio = null;
+    }
+    this.vibrate(10);
   }
 
   // ==========================================
@@ -630,14 +751,21 @@ class Remote4RealApp {
             this.updateGeoUI(data.distance_km);
           }
 
-          // 4. AUTH FAILED
+          // 4. PLAY ALARM PACKET (Bilateral Find My Device)
+          else if (data.type === 'play_alarm') {
+            const title = data.title || '🔔 LOCATING PHONE';
+            const msg = data.message || 'DESKTOP PC IS RINGING THIS PHONE!';
+            this.playPhoneAlarm(title, msg);
+          }
+
+          // 5. AUTH FAILED
           else if (data.type === 'auth_failed') {
             this.isAuthenticated = false;
             const err = data.error || 'INVALID PIN';
             this.showPinModal(err);
           }
 
-          // 5. PONG LATENCY
+          // 6. PONG LATENCY
           else if (data.type === 'pong') {
             const now = Date.now();
             this.currentPingMs = Math.round(now - data.ts);

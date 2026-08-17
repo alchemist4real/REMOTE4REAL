@@ -1700,6 +1700,57 @@ html, body {
   color: var(--ink-inverse);
 }
 
+.modal-full-btn:active {
+  transform: translateY(1px);
+}
+
+/* Bilateral Find My Device Alarm Modal */
+.alarm-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid var(--ink-primary);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.alarm-icon-box {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto;
+}
+
+.alarm-bell-icon {
+  font-size: 2rem;
+  z-index: 2;
+  animation: bell-shake 0.5s infinite ease-in-out;
+}
+
+.alarm-ripple-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--ink-primary);
+  animation: alarm-wave 1s infinite cubic-bezier(0.1, 0.8, 0.3, 1);
+  z-index: 1;
+}
+
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-16deg); }
+  75% { transform: rotate(16deg); }
+}
+
+@keyframes alarm-wave {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
 .modal-full-btn.copied {
   background: #34c759;
   color: #fff;

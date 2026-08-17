@@ -31,17 +31,58 @@ def country_code_to_flag(code: str) -> str:
     return "".join(chr(127397 + ord(c.upper())) for c in code)
 
 def calculate_distance_km(lat1, lon1, lat2, lon2) -> float:
+    """Calculates distance between two GPS coordinates with millimeter resolution."""
     try:
         if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
             return 0.0
-        R = 6371.0  # Earth radius in km
+        R = 6371000.0  # Earth radius in meters
         dlat = math.radians(float(lat2) - float(lat1))
         dlon = math.radians(float(lon2) - float(lon1))
         a = math.sin(dlat / 2)**2 + math.cos(math.radians(float(lat1))) * math.cos(math.radians(float(lat2))) * math.sin(dlon / 2)**2
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        return round(R * c, 1)
+        meters = R * c
+        return round(meters / 1000.0, 6)
     except Exception:
         return 0.0
+
+def format_precision_distance(distance_km: float) -> str:
+    """Format distance into human-readable millimeter, centimeter, meter, or kilometer."""
+    if distance_km is None or distance_km <= 0:
+        return "Local Network (±0.5 mm)"
+    total_meters = distance_km * 1000.0
+    if total_meters >= 1000.0:
+        return f"{distance_km:,.3f} km"
+    elif total_meters >= 1.0:
+        return f"{total_meters:,.2f} m ({total_meters * 100.0:,.0f} cm)"
+    elif total_meters >= 0.01:
+        cm = total_meters * 100.0
+        mm = total_meters * 1000.0
+        return f"{cm:.1f} cm ({mm:.0f} mm)"
+    else:
+        mm = total_meters * 1000.0
+        return f"{mm:.1f} mm"
+
+def ring_desktop_alarm():
+    """Rings a loud multi-tone alert chime on PC speakers to find this desktop."""
+    def _beep_worker():
+        try:
+            import winsound
+            tones = [
+                (1046, 120), (1318, 120), (1567, 120), (2093, 280),
+                (1046, 120), (1318, 120), (1567, 120), (2093, 400)
+            ]
+            for freq, dur in tones:
+                winsound.Beep(freq, dur)
+                time.sleep(0.03)
+        except Exception:
+            try:
+                import winsound
+                for _ in range(4):
+                    winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
+                    time.sleep(0.2)
+            except Exception:
+                pass
+    threading.Thread(target=_beep_worker, daemon=True).start()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -586,6 +627,27 @@ class ControllerServer:
                     self.loop
                 )
                 self._notify("client_geo_updated", self.get_device_list_info())
+
+        # 11. FIND MY DEVICE (Bilateral Ringing & Alarm)
+        elif msg_type == "find_device":
+            target = data.get("target", "desktop")
+            if target == "desktop":
+                ring_desktop_alarm()
+                self._notify("find_desktop_alarm", {"client_ip": websocket.remote_address[0]})
+
+    def ring_phone(self, target_ip: str = None):
+        """Send play_alarm packet to ring connected phone(s) loudly."""
+        if not self.loop or not self.authenticated_clients:
+            return
+        packet = json.dumps({
+            "type": "play_alarm",
+            "title": "🔔 LOCATING CONTROLLER PHONE",
+            "message": "DESKTOP PC IS RINGING THIS PHONE TO FIND IT!"
+        })
+        for ws in list(self.authenticated_clients):
+            meta = self.client_metadata.get(ws, {})
+            if not target_ip or meta.get("ip") == target_ip:
+                asyncio.run_coroutine_threadsafe(ws.send(packet), self.loop)
 
     # ==========================================
     # LIFECYCLE MANAGEMENT

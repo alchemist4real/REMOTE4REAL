@@ -727,7 +727,7 @@
           <div class="modal-body">
             <!-- Worldwide Dual-Location Status Card -->
             <div class="geo-status-card" id="geo-status-card">
-              <div class="geo-header-title">🌍 WORLDWIDE CONNECTION MAPPING</div>
+              <div class="geo-header-title">🌍 WORLDWIDE PRECISION MAPPING</div>
               <div class="geo-row">
                 <span class="geo-device-tag">📱 PHONE (YOU):</span>
                 <span id="geo-client-location" class="geo-loc-text">DETECTING...</span>
@@ -738,6 +738,12 @@
               <div class="geo-row">
                 <span class="geo-device-tag">💻 DESKTOP PC:</span>
                 <span id="geo-desktop-location" class="geo-loc-text">CONNECTING...</span>
+              </div>
+              <!-- Bilateral Find Device Trigger -->
+              <div class="geo-btn-container" style="margin-top: 8px;">
+                <button id="btn-ring-desktop-pc" class="modal-full-btn highlight" style="height: 32px; font-size: 0.72rem;">
+                  🔊 RING DESKTOP PC (FIND COMPUTER)
+                </button>
               </div>
             </div>
 
@@ -758,6 +764,21 @@
               ENGINEERED BY ALCHEMIST4REAL
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- BILATERAL FIND MY DEVICE ALARM MODAL           -->
+      <!-- ============================================== -->
+      <div id="alarm-notification-modal" class="modal-overlay hidden">
+        <div class="modal-card alarm-card">
+          <div class="alarm-icon-box">
+            <div class="alarm-ripple-ring"></div>
+            <div class="alarm-bell-icon">🔔</div>
+          </div>
+          <h3 id="alarm-modal-title" style="margin-top: 8px; font-size: 1rem; text-align: center;">DESKTOP IS CALLING PHONE</h3>
+          <p id="alarm-modal-desc" style="font-size: 0.75rem; color: #666; text-align: center; margin: 6px 0 14px 0;">Your Desktop PC is ringing this phone so you can find it!</p>
+          <button id="btn-stop-alarm" class="modal-full-btn highlight" style="height: 38px; font-size: 0.82rem;">STOP RINGING</button>
         </div>
       </div>
 

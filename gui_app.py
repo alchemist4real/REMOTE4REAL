@@ -592,13 +592,46 @@ class Remote4RealDesktopGUI:
         self.devices_textbox.insert(tk.END, "No devices connected yet. Scan QR code to connect.\n")
         self.devices_textbox.configure(state="disabled")
 
+        # Bilateral Find My Device Buttons Row
+        find_btn_row = ctk.CTkFrame(card, fg_color="transparent")
+        find_btn_row.pack(fill=tk.X, padx=14, pady=(4, 6))
+
+        btn_ring_phone = ctk.CTkButton(
+            find_btn_row,
+            text="🔊 RING PHONE (FIND CONTROLLER)",
+            font=("Courier New", 10, "bold"),
+            fg_color=("#000000", "#ffffff"),
+            text_color=("#ffffff", "#000000"),
+            hover_color=("#222222", "#dcdcdc"),
+            corner_radius=4,
+            height=30,
+            command=self.on_ring_phones_clicked
+        )
+        btn_ring_phone.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
+
+        btn_ring_pc = ctk.CTkButton(
+            find_btn_row,
+            text="🔊 TEST PC CHIME",
+            font=("Courier New", 10, "bold"),
+            fg_color=("#ffffff", "#1a1a20"),
+            text_color=("#000000", "#ffffff"),
+            border_width=1,
+            border_color=("#d0d0d4", "#303038"),
+            hover_color=("#f0f0f4", "#262630"),
+            corner_radius=4,
+            width=140,
+            height=30,
+            command=lambda: self.server.ring_desktop_alarm() if hasattr(self.server, 'ring_desktop_alarm') else None
+        )
+        btn_ring_pc.pack(side=tk.RIGHT)
+
         # Live Input Stream Activity Box
         ctk.CTkLabel(
             card,
             text="LIVE INPUT STREAM MONITOR:",
             font=("Courier New", 10, "bold"),
             text_color=("#666666", "#888888")
-        ).pack(anchor=tk.W, padx=14, pady=(10, 4))
+        ).pack(anchor=tk.W, padx=14, pady=(6, 4))
 
         self.lbl_last_action = ctk.CTkLabel(
             card,
@@ -610,6 +643,10 @@ class Remote4RealDesktopGUI:
             height=36
         )
         self.lbl_last_action.pack(fill=tk.X, padx=14, pady=(0, 14))
+
+    def on_ring_phones_clicked(self):
+        self.server.ring_phone()
+        messagebox.showinfo("Ringing Phone", "Sent audible alarm to all connected controller phone(s)!")
 
     # ==========================================
     # 3. BLUETOOTH TETHERING SETUP GUIDE
@@ -907,7 +944,9 @@ class Remote4RealDesktopGUI:
                     geo = dev.get('geo', {})
                     loc_str = f"{geo.get('city', 'Unknown City')}, {geo.get('country', '')} {geo.get('flag', '')}".strip()
                     dist_km = dev.get('distance_km', 0.0)
-                    dist_str = f" | Dist: {dist_km:,.0f} km" if dist_km > 0 else ""
+                    
+                    from server import format_precision_distance
+                    dist_str = f" | Dist: {format_precision_distance(dist_km)}" if dist_km > 0 else " | Dist: Local (±0.5 mm)"
 
                     self.devices_textbox.insert(
                         tk.END,
@@ -916,6 +955,10 @@ class Remote4RealDesktopGUI:
                         f"    🔗 IP: {dev.get('ip')} | Latency: {dev.get('latency_ms', 0)}ms | Mode: {dev.get('mode', 'touchpad').upper()}\n\n"
                     )
             self.devices_textbox.configure(state="disabled")
+
+        elif event == "find_desktop_alarm":
+            client_ip = data.get("client_ip", "Phone")
+            self.lbl_last_action.configure(text=f"🔔 RINGING PC SPEAKERS — PHONE ({client_ip}) IS CALLING!")
 
         elif event == "screen_touch_click":
             self.lbl_last_action.configure(text=f"SCREEN TOUCH: ({data.get('x',0):.2f}, {data.get('y',0):.2f}) [{data.get('btn').upper()}]")
