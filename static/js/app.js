@@ -423,10 +423,17 @@ class Remote4RealApp {
   // WEBSOCKET & NETWORKING
   // ==========================================
   initNetwork() {
+    const params = new URLSearchParams(window.location.search);
     const host = window.location.hostname || 'localhost';
-    const wsPort = 8765;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${host}:${wsPort}`;
+    
+    let wsUrl;
+    if (params.get('ws')) {
+      wsUrl = params.get('ws');
+    } else {
+      const customWsPort = params.get('ws_port') || (window.location.port === '8080' ? 8765 : (window.location.port || 8765));
+      wsUrl = `${protocol}//${host}:${customWsPort}`;
+    }
 
     this.updateStatus('CONNECTING...', 'disconnected');
 

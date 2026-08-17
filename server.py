@@ -100,18 +100,37 @@ class ControllerServer:
             for info in socket.getaddrinfo(hostname, None, socket.AF_INET):
                 ip = info[4][0]
                 if ip not in [item["ip"] for item in ip_list] and not ip.startswith("127."):
+                    is_tailscale = ip.startswith("100.")
+                    is_zerotier = ip.startswith("10.147.") or ip.startswith("10.144.")
                     is_bluetooth = (
                         ip.startswith("192.168.44.") or 
                         ip.startswith("192.168.137.") or 
-                        ip.startswith("172.20.10.") or
-                        "bluetooth" in hostname.lower()
+                        ip.startswith("172.20.10.")
                     )
-                    name = "Bluetooth PAN / Tethering" if is_bluetooth else "Network Adapter"
+                    
+                    if is_tailscale:
+                        name = "Tailscale (Worldwide / Any Network)"
+                        priority = 1
+                        is_vpn = True
+                    elif is_zerotier:
+                        name = "ZeroTier VPN (Worldwide)"
+                        priority = 2
+                        is_vpn = True
+                    elif is_bluetooth:
+                        name = "Bluetooth PAN / Tethering"
+                        priority = 3
+                        is_vpn = False
+                    else:
+                        name = "LAN / Wi-Fi Adapter"
+                        priority = 4
+                        is_vpn = False
+
                     ip_list.append({
                         "ip": ip,
                         "name": name,
-                        "priority": 2 if is_bluetooth else 3,
-                        "is_bt": is_bluetooth
+                        "priority": priority,
+                        "is_bt": is_bluetooth,
+                        "is_vpn": is_vpn if 'is_vpn' in locals() else False
                     })
 
             if not ip_list:

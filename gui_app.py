@@ -286,7 +286,7 @@ class Remote4RealDesktopGUI:
 
         self.tab_connect = self.tabview.add(" CONNECT QR ")
         self.tab_devices = self.tabview.add(" ACTIVE DEVICES ")
-        self.tab_bluetooth = self.tabview.add(" BLUETOOTH TETHERING ")
+        self.tab_bluetooth = self.tabview.add(" GLOBAL & OFFLINE GUIDE ")
         self.tab_settings = self.tabview.add(" SECURITY & CONFIG ")
 
         self.build_connect_tab()
@@ -313,21 +313,21 @@ class Remote4RealDesktopGUI:
         # Connection Mode Selector (Segmented Button)
         self.seg_mode = ctk.CTkSegmentedButton(
             container,
-            values=["WI-FI / LOCAL LAN", "BLUETOOTH TETHERING"],
+            values=["LOCAL WI-FI / LAN", "BLUETOOTH TETHERING", "WORLDWIDE / VPN"],
             command=self.on_segmented_mode_change,
             font=("Courier New", 10, "bold"),
             height=32
         )
-        self.seg_mode.set("WI-FI / LOCAL LAN")
-        self.seg_mode.pack(fill=tk.X, pady=(0, 10))
+        self.seg_mode.set("LOCAL WI-FI / LAN")
+        self.seg_mode.pack(fill=tk.X, pady=(0, 8))
 
         # Adapter Selection Row
         adapter_row = ctk.CTkFrame(container, fg_color="transparent")
-        adapter_row.pack(fill=tk.X, pady=(0, 8))
+        adapter_row.pack(fill=tk.X, pady=(0, 6))
 
         ctk.CTkLabel(
             adapter_row,
-            text="NETWORK ADAPTER IP:",
+            text="NETWORK ADAPTER / INTERFACE IP:",
             font=("Courier New", 10, "bold"),
             text_color=("#444444", "#aaaaaa")
         ).pack(anchor=tk.W, pady=(0, 2))
@@ -341,7 +341,7 @@ class Remote4RealDesktopGUI:
             command=self.on_ip_combo_change,
             font=("Courier New", 10),
             dropdown_font=("Courier New", 10),
-            height=32
+            height=30
         )
         if self.combo_options:
             self.combo_ip.set(self.combo_options[0])
@@ -349,6 +349,42 @@ class Remote4RealDesktopGUI:
         else:
             self.selected_ip = "127.0.0.1"
         self.combo_ip.pack(fill=tk.X)
+
+        # Custom Global URL Row (for Cloudflare / Ngrok / Custom Domain)
+        custom_url_row = ctk.CTkFrame(container, fg_color="transparent")
+        custom_url_row.pack(fill=tk.X, pady=(4, 6))
+
+        ctk.CTkLabel(
+            custom_url_row,
+            text="CUSTOM GLOBAL HOST / TUNNEL URL:",
+            font=("Courier New", 9, "bold"),
+            text_color=("#666666", "#888888")
+        ).pack(anchor=tk.W, pady=(0, 1))
+
+        custom_url_inner = ctk.CTkFrame(custom_url_row, fg_color="transparent")
+        custom_url_inner.pack(fill=tk.X)
+
+        self.entry_custom_host = ctk.CTkEntry(
+            custom_url_inner,
+            font=("Courier New", 10),
+            placeholder_text="e.g. 100.x.x.x, my-tunnel.trycloudflare.com, or public IP",
+            height=28
+        )
+        self.entry_custom_host.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
+
+        btn_apply_host = ctk.CTkButton(
+            custom_url_inner,
+            text="APPLY HOST",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#000000", "#ffffff"),
+            text_color=("#ffffff", "#000000"),
+            hover_color=("#222222", "#dcdcdc"),
+            corner_radius=4,
+            width=80,
+            height=28,
+            command=self.on_apply_custom_host
+        )
+        btn_apply_host.pack(side=tk.RIGHT)
 
         # QR Display Card
         qr_card = ctk.CTkFrame(
@@ -358,7 +394,7 @@ class Remote4RealDesktopGUI:
             border_color=("#e2e2e6", "#26262e"),
             corner_radius=6
         )
-        qr_card.pack(fill=tk.BOTH, expand=True, pady=(4, 0))
+        qr_card.pack(fill=tk.BOTH, expand=True, pady=(2, 0))
 
         # QR Container Frame (Fixed pure white background for QR scannability)
         qr_border_box = ctk.CTkFrame(
@@ -367,10 +403,10 @@ class Remote4RealDesktopGUI:
             corner_radius=6,
             border_width=1,
             border_color="#d0d0d4",
-            width=200,
-            height=200
+            width=180,
+            height=180
         )
-        qr_border_box.pack(pady=(12, 8))
+        qr_border_box.pack(pady=(8, 6))
         qr_border_box.pack_propagate(False)
 
         self.qr_label = ctk.CTkLabel(qr_border_box, text="", fg_color="#ffffff")
@@ -378,29 +414,29 @@ class Remote4RealDesktopGUI:
 
         # URL Box & Copy Button
         url_box = ctk.CTkFrame(qr_card, fg_color="transparent")
-        url_box.pack(fill=tk.X, padx=16, pady=4)
+        url_box.pack(fill=tk.X, padx=14, pady=2)
 
         self.url_label = ctk.CTkLabel(
             url_box,
             text="http://localhost:8080",
-            font=("Courier New", 11, "bold"),
+            font=("Courier New", 10, "bold"),
             fg_color=("#ffffff", "#1a1a20"),
             text_color=("#000000", "#ffffff"),
             corner_radius=4,
-            height=34
+            height=32
         )
-        self.url_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
+        self.url_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
 
         btn_copy = ctk.CTkButton(
             url_box,
             text="[COPY URL]",
-            font=("Courier New", 10, "bold"),
+            font=("Courier New", 9, "bold"),
             fg_color=("#000000", "#ffffff"),
             text_color=("#ffffff", "#000000"),
             hover_color=("#222222", "#dcdcdc"),
             corner_radius=4,
-            width=90,
-            height=34,
+            width=85,
+            height=32,
             command=self.copy_url
         )
         btn_copy.pack(side=tk.RIGHT)
@@ -411,13 +447,25 @@ class Remote4RealDesktopGUI:
             font=("Courier New", 9, "bold"),
             text_color=("#666666", "#888888")
         )
-        self.phone_status_lbl.pack(pady=(4, 10))
+        self.phone_status_lbl.pack(pady=(2, 6))
 
         self.update_qr_code()
+
+    def on_apply_custom_host(self):
+        host = self.entry_custom_host.get().strip()
+        if not host:
+            return
+        # Clean host (remove http:// or https:// if provided)
+        host = host.replace("http://", "").replace("https://", "").rstrip("/")
+        self.selected_ip = host
+        self.update_qr_code()
+        messagebox.showinfo("Global Host Applied", f"Active Host set to:\n{self.selected_ip}\nQR Code updated for worldwide access.")
 
     def on_segmented_mode_change(self, value):
         if "BLUETOOTH" in value:
             self.switch_conn_mode("bluetooth")
+        elif "WORLDWIDE" in value or "VPN" in value:
+            self.switch_conn_mode("vpn")
         else:
             self.switch_conn_mode("wifi")
 
@@ -425,11 +473,34 @@ class Remote4RealDesktopGUI:
         self.connection_mode = mode
         if mode == "wifi":
             for idx, item in enumerate(self.ip_choices):
-                if not item.get("is_bt"):
+                if not item.get("is_bt") and not item.get("is_vpn"):
                     if idx < len(self.combo_options):
                         self.combo_ip.set(self.combo_options[idx])
                     self.selected_ip = item["ip"]
                     break
+        elif mode == "bluetooth":
+            for idx, item in enumerate(self.ip_choices):
+                if item.get("is_bt"):
+                    if idx < len(self.combo_options):
+                        self.combo_ip.set(self.combo_options[idx])
+                    self.selected_ip = item["ip"]
+                    break
+        elif mode == "vpn":
+            found_vpn = False
+            for idx, item in enumerate(self.ip_choices):
+                if item.get("is_vpn"):
+                    if idx < len(self.combo_options):
+                        self.combo_ip.set(self.combo_options[idx])
+                    self.selected_ip = item["ip"]
+                    found_vpn = True
+                    break
+            if not found_vpn:
+                messagebox.showinfo(
+                    "Worldwide / Tailscale Setup",
+                    "No active VPN (Tailscale/ZeroTier) detected on this PC.\n\n"
+                    "Tip: Install Tailscale on PC & Phone for instant 1-click international connection, "
+                    "or enter your Cloudflare Tunnel URL in 'CUSTOM GLOBAL HOST'."
+                )
         else:
             for idx, item in enumerate(self.ip_choices):
                 if item.get("is_bt"):
@@ -561,23 +632,39 @@ class Remote4RealDesktopGUI:
 
         guide_text = (
             "================================================================\n"
-            "OPTION A: BLUETOOTH TETHERING (100% OFFLINE / NO ROUTER REQUIRED)\n"
+            "OPTION 1: WORLDWIDE ACCESS VIA TAILSCALE MESH VPN (RECOMMENDED)\n"
             "================================================================\n"
-            "1. Pair your phone with this PC via Windows Bluetooth Settings.\n"
-            "2. On Phone: Go to Settings -> Connections/Network -> Enable 'Bluetooth Tethering'.\n"
-            "3. On PC: Right-click your paired phone in Bluetooth Devices -> Connect using -> Access Point.\n"
-            "4. In REMOTE4REAL: Switch to 'BLUETOOTH TETHERING' on the Connect tab and scan the QR!\n\n"
+            "Connect from ANY country, cellular 4G/5G, or hotel Wi-Fi without port forwarding:\n"
+            "1. Install Tailscale (free) on both your PC and your Phone (tailscale.com).\n"
+            "2. Sign in with the same account (Google/Apple/Microsoft) on both devices.\n"
+            "3. In REMOTE4REAL: Select 'WORLDWIDE / VPN' on the Connect tab.\n"
+            "4. Scan the QR code or open the 100.x.x.x URL on your phone from anywhere worldwide!\n\n"
             "================================================================\n"
-            "OPTION B: PHONE PORTABLE HOTSPOT (ULTRA-FAST < 2ms LATENCY)\n"
+            "OPTION 2: WORLDWIDE VIA CLOUDFLARE QUICK TUNNEL / REVERSE PROXY\n"
+            "================================================================\n"
+            "Instant public HTTPS link without signup or router configuration:\n"
+            "1. Run in terminal: cloudflared tunnel --url http://localhost:8080\n"
+            "2. Copy the generated URL (e.g. https://xxx.trycloudflare.com).\n"
+            "3. Paste into 'CUSTOM GLOBAL HOST' on the Connect tab and click 'APPLY HOST'.\n"
+            "4. Scan the generated QR code from any phone on mobile cellular data!\n\n"
+            "================================================================\n"
+            "OPTION 3: PHONE PORTABLE HOTSPOT (ULTRA-FAST < 2ms LATENCY)\n"
             "================================================================\n"
             "1. Turn on Mobile Hotspot on phone (cellular data is NOT required).\n"
             "2. Connect your PC's Wi-Fi directly to the phone's Hotspot.\n"
-            "3. Scan the QR code in 'CONNECT QR' tab to enjoy instant ultra-low latency control.\n\n"
+            "3. Scan the QR code in 'CONNECT QR' tab.\n\n"
             "================================================================\n"
-            "OPTION C: LOCAL WI-FI ROUTER (HOME / OFFICE)\n"
+            "OPTION 4: BLUETOOTH TETHERING (100% OFFLINE / NO ROUTER REQUIRED)\n"
             "================================================================\n"
-            "1. Connect both PC and Phone to the same Wi-Fi router / LAN.\n"
-            "2. Scan the Wi-Fi QR code."
+            "1. Pair your phone with this PC via Windows Bluetooth Settings.\n"
+            "2. On Phone: Go to Settings -> Network/Connections -> Enable 'Bluetooth Tethering'.\n"
+            "3. On PC: Right-click phone in Bluetooth Devices -> Connect using -> Access Point.\n"
+            "4. In REMOTE4REAL: Switch to 'BLUETOOTH TETHERING' on the Connect tab and scan the QR!\n\n"
+            "================================================================\n"
+            "OPTION 5: LOCAL WI-FI ROUTER (HOME / OFFICE LAN)\n"
+            "================================================================\n"
+            "1. Connect both PC and Phone to the same Wi-Fi network.\n"
+            "2. Scan the Wi-Fi QR code in 'LOCAL WI-FI / LAN'."
         )
         guide_box.insert(tk.END, guide_text)
         guide_box.configure(state="disabled")
