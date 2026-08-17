@@ -926,10 +926,15 @@ class Remote4RealDesktopGUI:
     def _process_ui_update(self, event: str, data: any):
         if event == "desktop_geo_resolved":
             geo = data if isinstance(data, dict) else {}
-            city = geo.get("city", "Local")
+            city = geo.get("city", "Desktop")
             cc = geo.get("country_code", "")
             flag = geo.get("flag", "🌐")
             self.lbl_desktop_geo.configure(text=f"📍 DESKTOP: {city.upper()}, {cc} {flag}")
+
+        elif event == "international_link_ready":
+            url = data.get("url", "")
+            if url:
+                self.lbl_last_action.configure(text=f"🌐 INTERNATIONAL AUTO-ROUTING ACTIVE: {url[:45]}...")
 
         elif event in ("client_authenticated", "client_disconnected", "client_geo_updated"):
             devices = data if isinstance(data, list) else []

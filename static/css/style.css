@@ -1929,3 +1929,280 @@ html, body {
   font-weight: 700;
   text-decoration: underline;
 }
+
+/* ==============================================================================
+   DIRECTIONAL SIGNAL RADAR & COMPASS FINDER MODAL
+   ============================================================================== */
+.radar-compass-card {
+  max-width: 330px;
+  text-align: center;
+  border: 2px solid var(--ink-primary);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.radar-pulse-btn {
+  position: relative;
+}
+
+.radar-pulse-btn::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: #34c759;
+  border-radius: 50%;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.8); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+  100% { transform: scale(0.8); opacity: 1; }
+}
+
+.compass-dial-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.compass-outer-ring {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 2px solid var(--border-dark);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.compass-cardinal {
+  position: absolute;
+  font-family: var(--font-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.compass-n { top: 4px; color: var(--ink-primary); font-weight: 900; }
+.compass-s { bottom: 4px; }
+.compass-e { right: 6px; }
+.compass-w { left: 6px; }
+
+.compass-inner-crosshair {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.compass-inner-crosshair::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: var(--border-medium);
+  opacity: 0.6;
+}
+
+.compass-inner-crosshair::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 15%;
+  bottom: 15%;
+  width: 1px;
+  background: var(--border-medium);
+  opacity: 0.6;
+}
+
+.compass-radar-sweep {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(0, 0, 0, 0.15) 0deg, transparent 60deg);
+  animation: radar-sweep 2.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.compass-target-arrow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1);
+  z-index: 5;
+}
+
+.arrow-head {
+  position: absolute;
+  top: 24px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 28px solid var(--ink-primary);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.arrow-tail {
+  position: absolute;
+  bottom: 30px;
+  width: 4px;
+  height: 24px;
+  background: var(--ink-secondary);
+  border-radius: 2px;
+}
+
+.arrow-core-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink-primary);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+.radar-precision-readout {
+  margin: 6px 0;
+}
+
+.radar-dist-hero {
+  font-family: var(--font-primary);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--ink-primary);
+  letter-spacing: 0.5px;
+}
+
+.radar-dist-sub {
+  font-family: var(--font-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+
+.radar-signal-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 8px 0;
+  text-align: left;
+}
+
+.signal-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-primary);
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.signal-label { color: var(--ink-secondary); }
+.signal-val { color: var(--ink-primary); }
+
+.radar-rssi-track {
+  width: 100%;
+  height: 6px;
+  background: var(--border-medium);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.radar-rssi-fill {
+  height: 100%;
+  background: var(--ink-primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.radar-proximity-badge {
+  text-align: center;
+  font-family: var(--font-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 3px;
+}
+
+.radar-proximity-badge.in-range {
+  background: #34c759;
+  color: #ffffff;
+}
+
+.radar-proximity-badge.nearby {
+  background: #ff9500;
+  color: #ffffff;
+}
+
+.radar-proximity-badge.far {
+  background: #007aff;
+  color: #ffffff;
+}
+
+.radar-actions-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* ==============================================================================
+   EARLY BLUETOOTH CONTRACT & PERMISSION MODAL
+   ============================================================================== */
+.bt-contract-card {
+  max-width: 320px;
+  text-align: center;
+  border: 2px solid var(--ink-primary);
+}
+
+.bt-contract-icon {
+  font-size: 2.2rem;
+  margin-bottom: 4px;
+}
+
+.bt-contract-desc {
+  font-family: var(--font-secondary);
+  font-size: 0.72rem;
+  color: var(--ink-secondary);
+  line-height: 1.35;
+  margin: 6px 0 10px 0;
+}
+
+.bt-contract-features {
+  text-align: left;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: var(--font-primary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}

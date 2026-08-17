@@ -195,6 +195,25 @@ class ControllerServer:
         self.loop = None
         self.active_mode = "touchpad"
 
+    def _auto_setup_international_signal(self):
+        """Automatically provisions zero-config international cloud signal routing."""
+        try:
+            # 1. Fetch public WAN address for direct international transit
+            req = urllib.request.Request("https://api.ipify.org?format=json", headers={"User-Agent": "REMOTE4REAL/2.0"})
+            with urllib.request.urlopen(req, timeout=4.0) as res:
+                data = json.loads(res.read().decode())
+                pub_ip = data.get("ip")
+                if pub_ip:
+                    self.international_link = f"https://remote4real.vercel.app/?host={pub_ip}&port={self.http_port}&ws={self.ws_port}&pin={self.security_pin}"
+                    logging.info(f"International Auto-Setup Link Ready: {self.international_link}")
+                    self._notify("international_link_ready", {"url": self.international_link, "ip": pub_ip})
+        except Exception as e:
+            # Fallback to desktop geo IP if available
+            if self.desktop_geo_info.get("ip"):
+                pub_ip = self.desktop_geo_info.get("ip")
+                self.international_link = f"https://remote4real.vercel.app/?host={pub_ip}&port={self.http_port}&ws={self.ws_port}&pin={self.security_pin}"
+                self._notify("international_link_ready", {"url": self.international_link, "ip": pub_ip})
+
     def _resolve_desktop_geo(self):
         """Asynchronously resolve Desktop's public geographic location."""
         try:
@@ -220,6 +239,11 @@ class ControllerServer:
                     }
                     logging.info(f"Desktop Geolocation resolved: {self.desktop_geo_info['city']}, {self.desktop_geo_info['country']} {self.desktop_geo_info['flag']}")
                     self._notify("desktop_geo_resolved", self.desktop_geo_info)
+                    
+                    if not self.international_link and data.get("query"):
+                        pub_ip = data.get("query")
+                        self.international_link = f"https://remote4real.vercel.app/?host={pub_ip}&port={self.http_port}&ws={self.ws_port}&pin={self.security_pin}"
+                        self._notify("international_link_ready", {"url": self.international_link, "ip": pub_ip})
         except Exception as e:
             logging.debug(f"Could not resolve desktop geo (offline/private LAN): {e}")
 
