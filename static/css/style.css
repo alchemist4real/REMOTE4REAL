@@ -577,7 +577,7 @@ html, body {
   touch-action: auto;
 }
 
-.deck-action-btn, .deck-clear-btn {
+.deck-action-btn, .deck-clear-btn, .deck-bksp-btn {
   background: var(--ink-primary);
   border: 1px solid var(--border-dark);
   border-radius: 3px;
@@ -593,11 +593,24 @@ html, body {
   cursor: pointer;
   flex-shrink: 0;
   touch-action: manipulation;
+  transition: transform 0.06s, background 0.08s;
 }
 
-.deck-clear-btn {
+.deck-clear-btn, .deck-bksp-btn {
   background: var(--bg-surface);
   color: var(--ink-primary);
+  border: 1px solid var(--border-medium);
+}
+
+.deck-bksp-btn {
+  font-size: 0.85rem;
+}
+
+.deck-action-btn:active, .deck-clear-btn:active, .deck-bksp-btn:active,
+.deck-action-btn.active, .deck-clear-btn.active, .deck-bksp-btn.active {
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+  transform: scale(0.94);
 }
 
 .mouse-action-bar {

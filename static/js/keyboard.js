@@ -1,7 +1,7 @@
 /**
  * REMOTE4REAL — Native Keyboard Bridge
  * Engineered by alchemist4real
- * Streams keystrokes, autocorrect, voice typing, and swipe input from mobile keyboards directly to PC.
+ * Streams keystrokes, autocorrect, voice typing, swipe input, and continuous backspaces from mobile keyboards directly to PC.
  */
 
 class KeyboardController {
@@ -13,9 +13,14 @@ class KeyboardController {
       win: false
     };
 
+    this.SENTINEL = '\u200B'; // Zero-width space buffer to capture mobile backspaces on empty input
+    this.repeatTimer = null;
+    this.repeatInterval = null;
+
     this.initNativeTyping();
     this.initShortcuts();
     this.initSpecialKeys();
+    this.initHoldRepeatKeys();
   }
 
   // ==========================================
@@ -23,81 +28,140 @@ class KeyboardController {
   // ==========================================
   initNativeTyping() {
     const inputs = [
-      { inputId: 'deck-native-input', sendId: 'btn-deck-send', clearId: 'btn-deck-clear' },
-      { inputId: 'keyboard-native-input', sendId: 'btn-keyboard-send', clearId: 'btn-keyboard-clear' },
-      { inputId: 'keypad-native-input', sendId: 'btn-keypad-send', clearId: 'btn-keypad-clear' },
-      { inputId: 'native-keyboard-bridge', sendId: null, clearId: null },
-      { inputId: 'native-live-input', sendId: null, clearId: null }
+      { inputId: 'deck-native-input', sendId: 'btn-deck-send', clearId: 'btn-deck-clear', bkspId: 'btn-deck-bksp' },
+      { inputId: 'keyboard-native-input', sendId: 'btn-keyboard-send', clearId: 'btn-keyboard-clear', bkspId: 'btn-keyboard-bksp' },
+      { inputId: 'keypad-native-input', sendId: 'btn-keypad-send', clearId: 'btn-keypad-clear', bkspId: 'btn-keypad-bksp' },
+      { inputId: 'native-keyboard-bridge', sendId: null, clearId: null, bkspId: null },
+      { inputId: 'native-live-input', sendId: null, clearId: null, bkspId: null }
     ];
 
-    inputs.forEach(({ inputId, sendId, clearId }) => {
+    inputs.forEach(({ inputId, sendId, clearId, bkspId }) => {
       const inputEl = document.getElementById(inputId);
       if (!inputEl) return;
 
-      let lastVal = inputEl.value || '';
+      // Initialize with sentinel when focused or empty
+      const ensureSentinel = () => {
+        if (!inputEl.value || inputEl.value === '') {
+          inputEl.value = this.SENTINEL;
+        }
+      };
+
+      inputEl.addEventListener('focus', () => {
+        ensureSentinel();
+      });
+
+      // 1. BEFOREINPUT EVENT (Standard across modern Android & iOS)
+      inputEl.addEventListener('beforeinput', (e) => {
+        const inputType = e.inputType;
+
+        if (inputType === 'deleteContentBackward') {
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
+          }
+          if (window.app && window.app.vibrate) window.app.vibrate(8);
+        } else if (inputType === 'deleteContentForward') {
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'key', k: 'delete', act: 'tap' });
+          }
+          if (window.app && window.app.vibrate) window.app.vibrate(8);
+        } else if (inputType === 'deleteWordBackward') {
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'key_combo', keys: ['ctrl', 'backspace'] });
+          }
+          if (window.app && window.app.vibrate) window.app.vibrate(12);
+        } else if (inputType === 'deleteWordForward') {
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'key_combo', keys: ['ctrl', 'delete'] });
+          }
+          if (window.app && window.app.vibrate) window.app.vibrate(12);
+        } else if (inputType === 'deleteHardLineBackward' || inputType === 'deleteSoftLineBackward') {
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'key_combo', keys: ['shift', 'home'] });
+            window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
+          }
+          if (window.app && window.app.vibrate) window.app.vibrate(14);
+        }
+      });
+
+      // 2. INPUT EVENT (Fallback & character streaming)
+      let lastVal = inputEl.value || this.SENTINEL;
 
       inputEl.addEventListener('input', (e) => {
         const currentVal = inputEl.value;
 
-        // 1. Single character insertion
+        // Clean values by stripping sentinel for length comparisons
+        const cleanCurrent = currentVal.replace(/\u200B/g, '');
+        const cleanLast = lastVal.replace(/\u200B/g, '');
+
+        // A. Single character insertion
         if (e.inputType === 'insertText' && e.data) {
           if (window.app && window.app.send) {
             window.app.send({ t: 'type_text', text: e.data });
           }
           if (window.app && window.app.vibrate) window.app.vibrate(8);
         }
-        // 2. Backspace / Delete
-        else if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') {
-          if (window.app && window.app.send) {
-            window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
+        // B. Backspace when input is at or below sentinel
+        else if (currentVal === '' || (cleanCurrent.length < cleanLast.length && !e.inputType?.startsWith('insert'))) {
+          // If beforeinput did not already fire or for mobile webview fallback
+          if (!e.inputType || e.inputType === 'deleteContentBackward') {
+            // Already handled in beforeinput if supported, but if value dropped to 0, ensure we restore sentinel
           }
-          if (window.app && window.app.vibrate) window.app.vibrate(10);
+          const deleteCount = Math.max(1, cleanLast.length - cleanCurrent.length);
+          if (deleteCount > 1) {
+            for (let i = 1; i < deleteCount; i++) {
+              if (window.app && window.app.send) {
+                window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
+              }
+            }
+          }
+          if (window.app && window.app.vibrate) window.app.vibrate(8);
         }
-        // 3. Enter / Linebreak
+        // C. Enter / Linebreak
         else if (e.inputType === 'insertLineBreak') {
           if (window.app && window.app.send) {
             window.app.send({ t: 'key', k: 'enter', act: 'tap' });
           }
           if (window.app && window.app.vibrate) window.app.vibrate(12);
         }
-        // 4. Voice typing / Swipe Typing / Autocomplete replacement / Paste
-        else {
-          if (currentVal.length > lastVal.length) {
-            const addedText = currentVal.slice(lastVal.length);
-            if (window.app && window.app.send) {
-              window.app.send({ t: 'type_text', text: addedText });
-            }
-            if (window.app && window.app.vibrate) window.app.vibrate(8);
-          } else if (currentVal.length < lastVal.length) {
-            const deleteCount = lastVal.length - currentVal.length;
-            for (let i = 0; i < deleteCount; i++) {
-              if (window.app && window.app.send) {
-                window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
-              }
-            }
-            if (window.app && window.app.vibrate) window.app.vibrate(10);
+        // D. Voice typing / Paste / Autocomplete
+        else if (cleanCurrent.length > cleanLast.length) {
+          const addedText = cleanCurrent.slice(cleanLast.length);
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'type_text', text: addedText });
           }
+          if (window.app && window.app.vibrate) window.app.vibrate(8);
         }
 
-        lastVal = currentVal;
+        // Always keep sentinel active so mobile keyboard doesn't disable backspace
+        if (currentVal === '') {
+          inputEl.value = this.SENTINEL;
+          lastVal = this.SENTINEL;
+        } else {
+          lastVal = currentVal;
+        }
       });
 
-      // Special keydowns
+      // 3. KEYDOWN EVENT (Hardware keyboard / Desktop testing)
       inputEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const val = inputEl.value;
-          if (val) {
+        if (e.key === 'Backspace') {
+          const clean = inputEl.value.replace(/\u200B/g, '');
+          if (clean.length === 0) {
+            e.preventDefault();
             if (window.app && window.app.send) {
-              window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+              window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
             }
-            inputEl.value = '';
-            lastVal = '';
-          } else {
-            if (window.app && window.app.send) {
-              window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-            }
+            if (window.app && window.app.vibrate) window.app.vibrate(8);
+            inputEl.value = this.SENTINEL;
+            lastVal = this.SENTINEL;
           }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = inputEl.value.replace(/\u200B/g, '');
+          if (window.app && window.app.send) {
+            window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+          }
+          inputEl.value = this.SENTINEL;
+          lastVal = this.SENTINEL;
           if (window.app && window.app.vibrate) window.app.vibrate(12);
         } else if (e.key === 'Tab') {
           e.preventDefault();
@@ -115,40 +179,104 @@ class KeyboardController {
         }
       });
 
-      // Send button
+      // 4. DEDICATED BACKSPACE BUTTON (Tap & Hold-to-repeat)
+      if (bkspId) {
+        const bkspBtn = document.getElementById(bkspId);
+        if (bkspBtn) {
+          const doBksp = () => {
+            if (window.app && window.app.send) {
+              window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
+            }
+            if (window.app && window.app.vibrate) window.app.vibrate(8);
+            // Also trim local input if it has content
+            const clean = inputEl.value.replace(/\u200B/g, '');
+            if (clean.length > 0) {
+              inputEl.value = this.SENTINEL + clean.slice(0, -1);
+              lastVal = inputEl.value;
+            }
+          };
+
+          const startRepeat = (e) => {
+            e.preventDefault();
+            bkspBtn.classList.add('active');
+            doBksp();
+
+            this.repeatTimer = setTimeout(() => {
+              this.repeatInterval = setInterval(() => {
+                doBksp();
+              }, 60);
+            }, 300);
+          };
+
+          const stopRepeat = () => {
+            bkspBtn.classList.remove('active');
+            clearTimeout(this.repeatTimer);
+            clearInterval(this.repeatInterval);
+            this.repeatTimer = null;
+            this.repeatInterval = null;
+          };
+
+          bkspBtn.addEventListener('touchstart', startRepeat, { passive: false });
+          bkspBtn.addEventListener('touchend', stopRepeat);
+          bkspBtn.addEventListener('touchcancel', stopRepeat);
+          bkspBtn.addEventListener('mousedown', startRepeat);
+          bkspBtn.addEventListener('mouseup', stopRepeat);
+          bkspBtn.addEventListener('mouseleave', stopRepeat);
+        }
+      }
+
+      // 5. SEND BUTTON
       if (sendId) {
         const sendBtn = document.getElementById(sendId);
         if (sendBtn) {
           const handleSend = (e) => {
             e.preventDefault();
-            const val = inputEl.value;
+            const val = inputEl.value.replace(/\u200B/g, '');
             if (val) {
               if (window.app && window.app.send) {
                 window.app.send({ t: 'type_text', text: val });
                 window.app.send({ t: 'key', k: 'enter', act: 'tap' });
               }
-              inputEl.value = '';
-              lastVal = '';
             } else {
               if (window.app && window.app.send) {
                 window.app.send({ t: 'key', k: 'enter', act: 'tap' });
               }
             }
+            inputEl.value = this.SENTINEL;
+            lastVal = this.SENTINEL;
             if (window.app && window.app.vibrate) window.app.vibrate([12, 25, 12]);
           };
           sendBtn.addEventListener('click', handleSend);
         }
       }
 
-      // Clear button
+      // 6. CLEAR BUTTON (Single click clears field, Double-click clears active PC text)
       if (clearId) {
         const clearBtn = document.getElementById(clearId);
         if (clearBtn) {
+          let lastClearTap = 0;
           const handleClear = (e) => {
             e.preventDefault();
-            inputEl.value = '';
-            lastVal = '';
-            if (window.app && window.app.vibrate) window.app.vibrate(10);
+            const now = Date.now();
+            const isDouble = (now - lastClearTap) < 350;
+            lastClearTap = now;
+
+            if (isDouble) {
+              // Double tap: Erase line/selection on PC (Ctrl+A -> Backspace)
+              if (window.app && window.app.send) {
+                window.app.send({ t: 'key_combo', keys: ['ctrl', 'a'] });
+                setTimeout(() => {
+                  window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
+                }, 40);
+              }
+              if (window.app && window.app.vibrate) window.app.vibrate([15, 30, 15]);
+            } else {
+              // Single tap: Clear local dock input
+              if (window.app && window.app.vibrate) window.app.vibrate(10);
+            }
+
+            inputEl.value = this.SENTINEL;
+            lastVal = this.SENTINEL;
           };
           clearBtn.addEventListener('click', handleClear);
         }
@@ -209,6 +337,51 @@ class KeyboardController {
       };
 
       btn.addEventListener('click', handlePress);
+    });
+  }
+
+  initHoldRepeatKeys() {
+    const repeatChips = document.querySelectorAll('.key-chip[data-key="backspace"], .key-chip[data-key="delete"]');
+    repeatChips.forEach(chip => {
+      const keyName = chip.getAttribute('data-key');
+      if (!keyName) return;
+
+      const doKey = () => {
+        if (window.app && window.app.send) {
+          window.app.send({ t: 'key', k: keyName, act: 'tap' });
+        }
+        if (window.app && window.app.vibrate) window.app.vibrate(6);
+      };
+
+      let timer = null;
+      let interval = null;
+
+      const startRepeat = (e) => {
+        e.preventDefault();
+        chip.classList.add('active');
+        doKey();
+
+        timer = setTimeout(() => {
+          interval = setInterval(() => {
+            doKey();
+          }, 60);
+        }, 280);
+      };
+
+      const stopRepeat = () => {
+        chip.classList.remove('active');
+        clearTimeout(timer);
+        clearInterval(interval);
+        timer = null;
+        interval = null;
+      };
+
+      chip.addEventListener('touchstart', startRepeat, { passive: false });
+      chip.addEventListener('touchend', stopRepeat);
+      chip.addEventListener('touchcancel', stopRepeat);
+      chip.addEventListener('mousedown', startRepeat);
+      chip.addEventListener('mouseup', stopRepeat);
+      chip.addEventListener('mouseleave', stopRepeat);
     });
   }
 }
