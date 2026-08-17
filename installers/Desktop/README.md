@@ -1,6 +1,6 @@
-# REMOTE4REAL — Desktop Windows Package
+# REMOTE4REAL — Desktop Windows Package (v1.1.0)
 
-This directory contains the standalone Windows package and installers for **REMOTE4REAL Desktop Companion Server**.
+This directory contains the standalone Windows package and installers for **REMOTE4REAL Desktop Companion Server** by `alchemist4real`.
 
 ---
 

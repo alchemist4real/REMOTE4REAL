@@ -1,23 +1,22 @@
-.
 ; Inno Setup Script for REMOTE4REAL
 #define MyAppName "REMOTE4REAL"
-#define MyAppVersion "1.0.0"
-#define MyAppPublisher "REMOTE4REAL Team"
-#define MyAppURL "https://github.com/remote4real"
+#define MyAppVersion "1.1.0"
+#define MyAppPublisher "alchemist4real"
+#define MyAppURL "https://github.com/alchemist4real/REMOTE4REAL"
 #define MyAppExeName "REMOTE4REAL.exe"
 
 [Setup]
-AppId={{9C5E558E-5A1D-4C91-9F1B-94E5B1A832A1}
+AppId={9C5E558E-5A1D-4C91-9F1B-94E5B1A832A1}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}/releases
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=.
-OutputBaseFilename=REMOTE4REAL_Windows_Setup_v1.0.0
+OutputBaseFilename=REMOTE4REAL_Windows_Setup_v1.1.0
 SetupIconFile=..\..\app_icon.ico
 Compression=lzma
 SolidCompression=yes

@@ -1,10 +1,25 @@
 # Vercel Ignore
 build/
 dist/
-installers/Desktop/REMOTE4REAL-Windows/
+installers/
 REMOTE4REALMobile/
 __pycache__/
 *.spec
 .git
 .expo/
 node_modules/
+.venv/
+venv/
+
+# Ignore Python dependencies and backend files so Vercel treats the project as a pure static web app
+requirements.txt
+*.py
+*.iss
+*.ico
+*.json
+!web/**
+!vercel.json
+*.bat
+install.ps1
+setup_environment.ps1
+static/

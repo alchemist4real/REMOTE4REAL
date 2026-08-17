@@ -1,21 +1,15 @@
 {
   "version": 2,
-  "name": "remote4real",
-  "cleanUrls": true,
-  "outputDirectory": "web",
-  "headers": [
+  "builds": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Engineered-By",
-          "value": "alchemist4real"
-        }
-      ]
+      "src": "web/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/web/$1"
     }
   ]
 }
