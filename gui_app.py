@@ -299,6 +299,7 @@ class Remote4RealDesktopGUI:
         self.tab_connect = self.tabview.add(" CONNECT QR ")
         self.tab_devices = self.tabview.add(" ACTIVE DEVICES ")
         self.tab_compass = self.tabview.add(" 🧭 RADAR COMPASS ")
+        self.tab_scan_wifi = self.tabview.add(" 🔍 SCAN WI-FI PHONES ")
         self.tab_bluetooth = self.tabview.add(" GLOBAL & OFFLINE GUIDE ")
         self.tab_settings = self.tabview.add(" SECURITY & CONFIG ")
 
@@ -310,6 +311,7 @@ class Remote4RealDesktopGUI:
         self.build_connect_tab()
         self.build_devices_tab()
         self.build_compass_tab()
+        self.build_scan_wifi_tab()
         self.build_bluetooth_tab()
         self.build_settings_tab()
         self._start_radar_animation()
@@ -849,7 +851,189 @@ class Remote4RealDesktopGUI:
         cv.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ffffff", outline="#000000", width=1)
 
     # ==========================================
-    # 3. BLUETOOTH TETHERING SETUP GUIDE
+    # 4. SCAN LOCAL WI-FI DEVICES & PAIRING REQUEST TAB
+    # ==========================================
+    def build_scan_wifi_tab(self):
+        card = ctk.CTkFrame(
+            self.tab_scan_wifi,
+            fg_color=("#f8f8fa", "#141418"),
+            border_width=1,
+            border_color=("#e2e2e6", "#26262e"),
+            corner_radius=6
+        )
+        card.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+
+        ctk.CTkLabel(
+            card,
+            text="LOCAL WI-FI SCANNER & CONTROLLER DISCOVERY",
+            font=("Courier New", 11, "bold"),
+            text_color=("#000000", "#ffffff")
+        ).pack(anchor=tk.W, padx=14, pady=(12, 6))
+
+        # Top Control Row with Scan Button
+        top_row = ctk.CTkFrame(card, fg_color="transparent")
+        top_row.pack(fill=tk.X, padx=14, pady=(0, 8))
+
+        self.btn_run_wifi_scan = ctk.CTkButton(
+            top_row,
+            text="🔄 SCAN LOCAL WI-FI NETWORK",
+            font=("Courier New", 10, "bold"),
+            fg_color=("#000000", "#ffffff"),
+            text_color=("#ffffff", "#000000"),
+            hover_color=("#222222", "#dcdcdc"),
+            corner_radius=4,
+            height=32,
+            command=self.on_run_wifi_scan_clicked
+        )
+        self.btn_run_wifi_scan.pack(side=tk.LEFT, padx=(0, 8))
+
+        self.lbl_scan_info = ctk.CTkLabel(
+            top_row,
+            text="Click SCAN to discover phones on your Wi-Fi subnet.",
+            font=("Courier New", 9),
+            text_color=("#666666", "#888888")
+        )
+        self.lbl_scan_info.pack(side=tk.LEFT)
+
+        # Device Selection ComboBox
+        ctk.CTkLabel(
+            card,
+            text="SELECT TARGET CONTROLLER DEVICE:",
+            font=("Courier New", 10, "bold"),
+            text_color=("#444444", "#aaaaaa")
+        ).pack(anchor=tk.W, padx=14, pady=(4, 2))
+
+        self.discovered_devices = []
+        self.selected_target_device = None
+        self.combo_devices = ctk.CTkComboBox(
+            card,
+            values=["No devices scanned yet. Click [SCAN]"],
+            font=("Courier New", 10),
+            dropdown_font=("Courier New", 10),
+            height=32,
+            command=self.on_device_selected
+        )
+        self.combo_devices.pack(fill=tk.X, padx=14, pady=(0, 8))
+
+        # Selected Device Details Box
+        self.dev_detail_box = ctk.CTkFrame(
+            card,
+            fg_color=("#ffffff", "#101014"),
+            border_width=1,
+            border_color=("#d0d0d4", "#2e2e36"),
+            corner_radius=4
+        )
+        self.dev_detail_box.pack(fill=tk.BOTH, expand=True, padx=14, pady=4)
+
+        self.lbl_dev_detail = ctk.CTkLabel(
+            self.dev_detail_box,
+            text="📱 DEVICE DETAILS:\n\nSelect a discovered mobile phone or device from the dropdown above.",
+            font=("Courier New", 10),
+            text_color=("#333333", "#cccccc"),
+            justify="left",
+            anchor="w"
+        )
+        self.lbl_dev_detail.pack(fill=tk.BOTH, expand=True, padx=12, pady=10)
+
+        # Invitation & Connection Action Buttons Row
+        action_row = ctk.CTkFrame(card, fg_color="transparent")
+        action_row.pack(fill=tk.X, padx=14, pady=(8, 12))
+
+        self.btn_send_invite = ctk.CTkButton(
+            action_row,
+            text="🚀 REQUEST CONNECTION (PUSH INVITE TO PHONE)",
+            font=("Courier New", 10, "bold"),
+            fg_color=("#000000", "#ffffff"),
+            text_color=("#ffffff", "#000000"),
+            hover_color=("#222222", "#dcdcdc"),
+            corner_radius=4,
+            height=34,
+            command=self.on_send_invite_clicked
+        )
+        self.btn_send_invite.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
+
+        btn_copy_pairing_link = ctk.CTkButton(
+            action_row,
+            text="📋 COPY PAIRING LINK",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#ffffff", "#1a1a20"),
+            text_color=("#000000", "#ffffff"),
+            border_width=1,
+            border_color=("#d0d0d4", "#303038"),
+            hover_color=("#f0f0f4", "#262630"),
+            corner_radius=4,
+            width=160,
+            height=34,
+            command=self.on_copy_pairing_link_clicked
+        )
+        btn_copy_pairing_link.pack(side=tk.RIGHT)
+
+    def on_run_wifi_scan_clicked(self):
+        self.btn_run_wifi_scan.configure(state="disabled", text="⏳ SCANNING WI-FI...")
+        self.lbl_scan_info.configure(text="Scanning local subnet (ports & ARP table)...")
+
+        def _worker():
+            devs = self.server.scan_local_wifi_devices()
+            def _update():
+                self.discovered_devices = devs
+                self.btn_run_wifi_scan.configure(state="normal", text="🔄 SCAN LOCAL WI-FI NETWORK")
+                if devs:
+                    options = [d["display"] for d in devs]
+                    self.combo_devices.configure(values=options)
+                    self.combo_devices.set(options[0])
+                    self.on_device_selected(options[0])
+                    self.lbl_scan_info.configure(text=f"Found {len(devs)} active device(s) on Wi-Fi!")
+                else:
+                    self.combo_devices.configure(values=["No devices found. Ensure Phone is on Wi-Fi."])
+                    self.combo_devices.set("No devices found. Ensure Phone is on Wi-Fi.")
+                    self.lbl_scan_info.configure(text="No active devices found. Try again or connect phone.")
+            self.root.after(0, _update)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def on_device_selected(self, choice_str):
+        if not self.discovered_devices:
+            return
+        selected = None
+        for d in self.discovered_devices:
+            if d.get("ip") in choice_str:
+                selected = d
+                break
+        if selected:
+            self.selected_target_device = selected
+            detail_text = (
+                f"🎯 TARGET CONTROLLER: {selected.get('display')}\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"• IP Address    : {selected.get('ip')}\n"
+                f"• MAC Address   : {selected.get('mac')}\n"
+                f"• Device Type   : {selected.get('vendor')}\n"
+                f"• Subnet Network: Local Wi-Fi (Direct Low-Latency)\n"
+                f"• Status        : Ready for Connection Request\n\n"
+                f"Click [REQUEST CONNECTION] below to send pairing invitation beacon."
+            )
+            self.lbl_dev_detail.configure(text=detail_text)
+
+    def on_send_invite_clicked(self):
+        if not hasattr(self, 'selected_target_device') or not self.selected_target_device:
+            messagebox.showwarning("Select Device", "Please scan and select a device from the list first.")
+            return
+        target_ip = self.selected_target_device.get("ip")
+        invite = self.server.send_connection_invitation(target_ip)
+        messagebox.showinfo(
+            "Invitation Sent",
+            f"🚀 Connection request sent to {target_ip} ({self.selected_target_device.get('vendor')})!\n\n"
+            f"When the phone opens REMOTE4REAL or when on Wi-Fi, it will automatically prompt to accept and connect as controller."
+        )
+
+    def on_copy_pairing_link_clicked(self):
+        primary_ip = self.server.get_local_ip_addresses()[0]["ip"]
+        link = f"http://{primary_ip}:{self.server.http_port}/?pin={self.server.security_pin}&auto=1"
+        self.root.clipboard_clear()
+        self.root.clipboard_append(link)
+        messagebox.showinfo("Pairing Link Copied", f"Direct 1-Click Pairing Link copied to clipboard:\n\n{link}")
+
+    # ==========================================
+    # 5. BLUETOOTH TETHERING SETUP GUIDE
     # ==========================================
     def build_bluetooth_tab(self):
         card = ctk.CTkFrame(

@@ -628,6 +628,8 @@ class Remote4RealApp {
       });
     }
 
+    this.initDesktopInviteUI();
+
     // Physical / virtual keyboard numpad fallback when PIN modal is open
     window.addEventListener('keydown', (e) => {
       if (pinModal && !pinModal.classList.contains('hidden')) {
@@ -679,6 +681,50 @@ class Remote4RealApp {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.send({ t: 'auth', pin: this.currentPin });
     }
+  }
+
+  // ==========================================
+  // DESKTOP LAN INVITATION HANDSHAKE
+  // ==========================================
+  initDesktopInviteUI() {
+    const inviteModal = document.getElementById('desktop-invite-modal');
+    const acceptBtn = document.getElementById('btn-accept-desktop-invite');
+    const declineBtn = document.getElementById('btn-decline-desktop-invite');
+
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (this.pendingInvitePin) {
+          this.currentPin = this.pendingInvitePin;
+          this.submitPin(this.pendingInvitePin);
+        }
+        if (inviteModal) inviteModal.classList.add('hidden');
+        this.vibrate([20, 60, 20]);
+      });
+    }
+
+    if (declineBtn) {
+      declineBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (inviteModal) inviteModal.classList.add('hidden');
+      });
+    }
+
+    // Check /api/check_invite over HTTP upon page load
+    try {
+      fetch('/api/check_invite')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.has_invite && data.pin) {
+            this.pendingInvitePin = data.pin;
+            if (inviteModal && !this.isAuthenticated) {
+              inviteModal.classList.remove('hidden');
+              this.vibrate([30, 60, 30]);
+            }
+          }
+        })
+        .catch(() => {});
+    } catch (e) {}
   }
 
   // ==========================================
@@ -992,8 +1038,21 @@ class Remote4RealApp {
         try {
           const data = JSON.parse(event.data);
 
+          // 0. DESKTOP PAIR INVITATION
+          if (data.type === 'desktop_pair_invitation') {
+            const pin = data.invite_pin || data.pin;
+            if (pin) {
+              this.pendingInvitePin = pin;
+              const modal = document.getElementById('desktop-invite-modal');
+              if (modal && !this.isAuthenticated) {
+                modal.classList.remove('hidden');
+                this.vibrate([40, 70, 40]);
+              }
+            }
+          }
+
           // 1. AUTH REQUIRED
-          if (data.type === 'auth_required') {
+          else if (data.type === 'auth_required') {
             if (!this.currentPin) {
               this.showPinModal();
             } else {

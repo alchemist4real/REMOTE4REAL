@@ -183,6 +183,7 @@ class ControllerServer:
         self.connected_clients: Set[websockets.WebSocketServerProtocol] = set()
         self.client_metadata: Dict[websockets.WebSocketServerProtocol, dict] = {}
         self.failed_attempts: Dict[str, dict] = {}  # ip -> {"count": int, "blocked_until": float}
+        self.pending_invitations: Dict[str, dict] = {} # ip -> {"time": float, "pin": str, "server": str}
 
         # Multi-Device Stream Management
         self.streaming_clients: Set[websockets.WebSocketServerProtocol] = set()
@@ -194,6 +195,115 @@ class ControllerServer:
         self.ws_server = None
         self.loop = None
         self.active_mode = "touchpad"
+
+    def scan_local_wifi_devices(self) -> list[dict]:
+        """High-speed multi-threaded probe and ARP scan of the local Wi-Fi subnet."""
+        devices = []
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('8.8.8.8', 80))
+            my_ip = s.getsockname()[0]
+            s.close()
+            
+            parts = my_ip.split('.')
+            subnet = f"{parts[0]}.{parts[1]}.{parts[2]}"
+
+            # Fast multi-threaded socket probe on ports 80/8080/443/5353/62078 (iOS/Android ports)
+            def _probe(ip):
+                for p in (80, 8080, 443, 62078):
+                    try:
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        sock.settimeout(0.12)
+                        sock.connect((ip, p))
+                        sock.close()
+                        return ip
+                    except Exception:
+                        pass
+                return None
+
+            ips_to_check = [f"{subnet}.{i}" for i in range(1, 255) if f"{subnet}.{i}" != my_ip]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+                list(executor.map(_probe, ips_to_check))
+
+            # Parse Windows ARP table
+            out = subprocess.check_output(['arp', '-a'], text=True, stderr=subprocess.DEVNULL)
+            for line in out.splitlines():
+                m = re.search(r'([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9a-fA-F-]+)\s+dynamic', line)
+                if m:
+                    ip, mac = m.group(1), m.group(2).lower()
+                    if ip.startswith(subnet) and ip != my_ip and not ip.endswith(".255"):
+                        # Identify vendor / device type
+                        vendor = "Mobile Phone / Wi-Fi Device"
+                        is_phone = True
+                        
+                        # Known MAC OUI heuristics
+                        mac_clean = mac.replace('-', ':').lower()
+                        if mac_clean.startswith(('00:03:93', '00:05:02', '00:0a:27', '00:0a:95', '00:0d:93', '00:11:24', '00:14:51', '00:16:cb', '00:17:f2', '00:19:e3', '00:1b:63', '00:1c:b3', '00:1d:4f', '00:1e:52', '00:1e:c2', '00:1f:5b', '00:1f:f3', '00:21:e9', '00:22:41', '00:23:12', '00:23:32', '00:23:6c', '00:23:df', '00:24:36', '00:25:00', '00:25:4b', '00:25:bc', '00:26:08', '00:26:4a', '00:26:b0', '00:88:65', '04:0c:ce', '04:15:52', '04:1e:64', '04:26:65', '04:4b:ed', '04:54:53', '04:db:56', '04:e5:36', '04:f1:3e', '04:f7:e4', '08:00:07', '08:66:98', '08:70:45', '08:74:02', '0c:15:39', '0c:30:21', '0c:4d:e9', '0c:74:c2', '0c:77:1a', '0c:bc:9f', '0c:d7:46', '10:1c:0c', '10:40:f3', '10:93:e9', '10:94:bb', '10:dd:b1', '14:10:9f', '14:20:5e', '14:5a:05', '14:7d:da', '14:8f:c6', '14:99:e2', '14:c2:13', '18:20:32', '18:34:51', '18:65:90', '18:af:61', '18:e7:28', '1c:1a:c0', '1c:36:bb', '1c:5c:f2', '1c:91:48', '1c:ab:a7', '20:76:8f', '20:78:f0', '20:7d:74', '20:a2:e4', '20:ab:37', '20:c9:d0', '20:ee:28', '24:24:0e', '24:5b:a7', '24:a0:74', '24:a2:e1', '24:ab:81', '24:e3:14', '24:f0:94', '24:f6:77', '28:0b:5c', '28:6a:ba', '28:cf:e9', '28:cf:da', '28:e0:2c', '28:e1:4c', '28:e7:cf', '28:f0:76', '2c:1f:23', '2c:20:0b', '2c:33:61', '2c:be:08', '2c:f0:ee', '30:07:4d', '30:10:e4', '30:35:ad', '30:63:6b', '30:75:12', '30:90:ab', '30:96:fb', '34:08:bc', '34:12:98', '34:15:9e', '34:36:3b', '34:51:c9', '34:a3:95', '34:ab:37', '34:c0:59', '34:e2:fd', '38:0f:4a', '38:48:4c', '38:71:de', '38:89:2c', '38:ca:da', '3c:07:54', '3c:15:c2', '3c:22:fb', '3c:2e:ff', '3c:a5:81', '3c:d0:f8', '3c:e0:72', '40:30:04', '40:33:1a', '40:3c:fc', '40:4d:7f', '40:6c:8f', '40:98:ad', '40:9c:28', '40:a6:d9', '40:b4:cd', '40:b8:37', '40:cb:c0', '40:d3:2d', '44:00:10', '44:2a:60', '44:4c:0c', '44:65:0d', '44:fb:42', '48:43:7c', '48:60:5f', '48:74:6e', '48:a9:d2', '48:d7:05', '48:e9:f1', '4c:32:75', '4c:57:ca', '4c:74:03', '4c:79:6e', '4c:b1:99', '50:32:37', '50:7a:55', '50:82:d5', '50:ea:d6', '54:26:96', '54:4e:90', '54:72:4f', '54:ae:27', '54:e4:3a', '58:1f:aa', '58:40:4e', '58:55:ca', '58:7f:57', '58:b0:35', '58:e2:8f', '5c:59:48', '5c:8d:4e', '5c:96:9d', '5c:ad:cf', '5c:e9:1e', '5c:f9:38', '60:03:08', '60:30:d4', '60:33:4b', '60:69:44', '60:92:17', '60:c5:47', '60:d9:c7', '60:f4:45', '60:fa:cd', '64:20:0c', '64:70:33', '64:9a:be', '64:a3:41', '64:b0:a6', '64:c7:53', '64:e6:82', '68:09:27', '68:5b:35', '68:64:4b', '68:96:7b', '68:a8:6d', '68:ab:1e', '68:ae:20', '68:d9:3c', '6c:19:c0', '6c:3e:6d', '6c:40:08', '6c:70:9f', '6c:8d:c1', '6c:94:f8', '6c:96:cf', '6c:ab:31', '70:11:24', '70:14:a6', '70:3e:ac', '70:48:0f', '70:56:81', '70:70:0d', '70:a2:b3', '70:cd:60', '70:de:e2', '70:ec:e4', '74:1b:b2', '74:42:7f', '74:81:14', '74:8d:08', '74:e1:b6', '74:e2:f5', '78:31:c1', '78:3a:84', '78:4f:43', '78:67:d7', '78:7b:8a', '78:88:6d', '78:9f:70', '78:ca:39', '78:fd:94', '7c:01:91', '7c:04:d0', '7c:50:49', '7c:6d:62', '7c:c3:a1', '7c:c5:37', '7c:d1:c3', '7c:fa:df', '80:00:6e', '80:49:71', '80:58:f8', '80:82:23', '80:92:9f', '80:b0:3d', '80:b9:e9', '80:d6:05', '80:ea:96', '84:25:db', '84:38:35', '84:41:67', '84:68:52', '84:78:8b', '84:85:06', '84:8e:df', '84:fc:ac', '88:19:08', '88:63:df', '88:64:40', '88:66:a5', '88:c6:63', '88:cb:87', '88:e8:7f', '8c:00:6d', '8c:77:12', '8c:85:90', '8c:fe:57', '90:27:e4', '90:3c:92', '90:72:40', '90:84:0d', '90:b0:ed', '90:b2:1f', '90:b9:31', '90:cd:b6', '90:dd:5d', '90:fd:61', '94:65:2d', '94:94:26', '94:e9:6a', '94:ea:32', '94:f6:a3', '98:01:a7', '98:03:d8', '98:10:e8', '98:58:8a', '98:9e:63', '98:b8:e3', '98:d6:bb', '98:f0:ab', '9c:04:eb', '9c:20:7b', '9c:29:3f', '9c:35:eb', '9c:4f:da', '9c:fc:01', 'a0:18:28', 'a0:99:9b', 'a4:31:35', 'a4:5e:60', 'a4:67:06', 'a4:83:e7', 'a4:b1:97', 'a4:b8:05', 'a4:c3:61', 'a4:d1:8c', 'a4:d1:d2', 'a4:e9:75', 'a8:20:66', 'a8:51:5b', 'a8:5b:78', 'a8:60:b6', 'a8:66:7f', 'a8:88:08', 'a8:8e:24', 'a8:96:75', 'a8:bb:cf', 'a8:be:27', 'a8:fa:d8', 'ac:1f:74', 'ac:29:3a', 'ac:37:43', 'ac:63:be', 'ac:7f:3e', 'ac:87:a3', 'ac:cf:5c', 'ac:cf:85', 'ac:e4:b5', 'b0:34:95', 'b0:65:bd', 'b0:70:2d', 'b0:72:bf', 'b0:9f:ba', 'b4:18:d1', 'b4:43:0d', 'b4:8b:19', 'b4:9c:df', 'b4:f1:da', 'b8:17:c2', 'b8:44:d9', 'b8:53:ac', 'b8:78:26', 'b8:c7:5d', 'b8:e8:56', 'b8:f8:83', 'b8:ff:61', 'bc:44:86', 'bc:52:b7', 'bc:54:36', 'bc:6c:21', 'bc:92:6b', 'bc:fe:d9', 'c0:84:7a', 'c0:9f:42', 'c0:a5:3e', 'c0:cc:f8', 'c0:ce:cd', 'c0:d0:12', 'c0:f2:fb', 'c4:2c:03', 'c8:1e:e7', 'c8:2a:14', 'c8:33:4b', 'c8:6f:1d', 'c8:85:50', 'c8:b5:b7', 'c8:bc:c8', 'c8:d0:83', 'c8:e0:eb', 'c8:ff:77', 'cc:08:8d', 'cc:25:ef', 'cc:29:f5', 'cc:44:63', 'cc:78:5f', 'cc:c7:60', 'd0:03:4b', 'd0:23:db', 'd0:25:98', 'd0:4f:7e', 'd0:81:7a', 'd0:a6:37', 'd0:c5:f3', 'd0:e1:40', 'd4:90:9c', 'd4:dc:cd', 'd4:f4:6f', 'd8:00:4d', 'd8:1c:79', 'd8:30:62', 'd8:96:95', 'd8:9e:3f', 'd8:a2:5e', 'd8:bb:2c', 'd8:cf:9c', 'd8:d1:cb', 'dc:2b:2a', 'dc:2b:61', 'dc:37:14', 'dc:41:5f', 'dc:52:85', 'dc:86:d8', 'dc:9b:9c', 'dc:a4:ca', 'dc:a9:04', 'dc:bf:e9', 'e0:33:8e', 'e0:5f:45', 'e0:66:78', 'e0:ac:cb', 'e0:b9:ba', 'e0:c7:67', 'e0:cb:ee', 'e0:f5:c6', 'e0:f8:47', 'e4:25:e7', 'e4:70:b8', 'e4:8b:7f', 'e4:90:7e', 'e4:98:d6', 'e4:a7:c5', 'e4:ce:8f', 'e8:04:0b', 'e8:06:88', 'e8:5b:5b', 'e8:80:2e', 'e8:8d:28', 'ec:35:86', 'ec:85:2f', 'f0:18:98', 'f0:24:75', 'f0:79:60', 'f0:98:9d', 'f0:99:b6', 'f0:b4:79', 'f0:c1:f1', 'f0:c3:71', 'f0:db:f8', 'f0:dc:e2', 'f0:f6:1c', 'f4:1b:a1', 'f4:37:b7', 'f4:5c:89', 'f4:f1:5a', 'f4:f9:51', 'f8:1e:df', 'f8:27:93', 'f8:38:80', 'f8:62:14', 'f8:6f:c1', 'f8:87:f1', 'f8:e0:79', 'f8:ff:c2', 'fc:18:3c', 'fc:25:3f', 'fc:e9:98')):
+                            vendor = "Apple Device (iPhone / iPad)"
+                        elif mac_clean.startswith(('00:07:ab', '00:12:47', '00:15:99', '00:16:6c', '00:17:c9', '00:18:e7', '00:1a:8a', '00:1c:43', '00:1d:25', '00:1e:e1', '00:21:19', '00:23:d6', '00:24:91', '00:26:5d', '08:08:c2', '08:37:3d', '08:fc:52', '0c:14:20', '14:bb:6e', '18:1e:78', '18:67:b0', '24:4b:03', '2c:44:01', '30:cd:a7', '34:be:00', '38:0a:94', '40:0e:85', '44:4e:1a', '4c:66:41', '50:01:d9', '54:92:be', '5c:0a:5b', '60:6b:bd', '68:05:71', '78:40:e4', '80:5b:65', '84:25:19', '94:01:c2', '9c:02:98', 'a0:0b:ba', 'a4:93:3f', 'ac:5f:3e', 'b4:07:f9', 'bc:72:b9', 'c4:73:1e', 'cc:05:1b', 'cc:3a:61', 'd0:17:6a', 'd4:e8:b2', 'e4:12:1d', 'ec:1f:72', 'f4:09:d8', 'fc:a1:3e')):
+                            vendor = "Samsung Galaxy (Phone / Tab)"
+                        elif mac_clean.startswith(('00:9e:c8', '08:e6:89', '14:f6:5a', '18:59:36', '28:6c:07', '34:80:b3', '3c:bd:d8', '50:d2:f5', '58:44:98', '5c:e8:eb', '64:09:80', '68:df:dd', '74:51:ba', '78:11:dc', '7c:1c:f1', '80:7b:1e', '8c:be:be', '9c:99:a0', 'a0:86:c6', 'a4:44:d0', 'ac:c1:ee', 'b0:38:29', 'b4:cd:27', 'c4:0b:cb', 'cc:04:b4', 'dc:72:9b', 'e4:46:da', 'ec:d0:9f', 'f4:60:e2', 'fc:64:3a')):
+                            vendor = "Xiaomi / Redmi / POCO"
+                        elif ip.endswith(".1"):
+                            vendor = "Wi-Fi Router / Gateway"
+                            is_phone = False
+
+                        devices.append({
+                            "ip": ip,
+                            "mac": mac,
+                            "vendor": vendor,
+                            "is_phone": is_phone,
+                            "display": f"{'📱' if is_phone else '🌐'} {ip} ({vendor})"
+                        })
+        except Exception as e:
+            logging.error(f"Error scanning LAN devices: {e}")
+        return devices
+
+    def send_connection_invitation(self, target_ip: str) -> dict:
+        """Dispatches an interactive controller connection invite to the target phone."""
+        clean_ip = str(target_ip).strip()
+        invite_data = {
+            "time": time.time(),
+            "pin": self.security_pin,
+            "host_ip": self.get_local_ip_addresses()[0]["ip"],
+            "http_port": self.http_port,
+            "server_name": socket.gethostname()
+        }
+        self.pending_invitations[clean_ip] = invite_data
+        logging.info(f"Sent connection invitation to target device {clean_ip} (PIN: {self.security_pin})")
+
+        # Dispatches UDP broadcast beacon on port 8766
+        def _beacon():
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                payload = json.dumps({
+                    "type": "desktop_pair_invitation",
+                    "target_ip": clean_ip,
+                    **invite_data
+                }).encode("utf-8")
+                s.sendto(payload, ("255.255.255.255", 8766))
+                s.sendto(payload, (clean_ip, 8766))
+                s.close()
+            except Exception:
+                pass
+        threading.Thread(target=_beacon, daemon=True).start()
+
+        # If device is already connected via WebSocket, send popup payload directly
+        if self.loop and self.connected_clients:
+            packet = json.dumps({
+                "type": "desktop_pair_invitation",
+                "pin": self.security_pin,
+                "server_name": socket.gethostname(),
+                "url": f"http://{invite_data['host_ip']}:{self.http_port}/?pin={self.security_pin}&auto=1"
+            })
+            for ws in list(self.connected_clients):
+                meta = self.client_metadata.get(ws, {})
+                if meta.get("ip") == clean_ip:
+                    asyncio.run_coroutine_threadsafe(ws.send(packet), self.loop)
+
+        self._notify("pair_request_sent", {"target_ip": clean_ip, "invite": invite_data})
+        return invite_data
 
     def _auto_setup_international_signal(self):
         """Automatically provisions zero-config international HTTPS/WSS cloud tunnel."""
@@ -438,7 +548,24 @@ class ControllerServer:
                     self.wfile.write(json.dumps(update_info).encode("utf-8"))
                     return
 
-                # 4. Static Assets
+                # 4. API: Check Pending Connection Invitations
+                if self.path.startswith('/api/check_invite'):
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    client_ip = self.client_address[0]
+                    invite = server_instance.pending_invitations.get(client_ip)
+                    resp = {
+                        "has_invite": bool(invite),
+                        "invite": invite,
+                        "server_name": socket.gethostname(),
+                        "pin": server_instance.security_pin if invite else ""
+                    }
+                    self.wfile.write(json.dumps(resp).encode("utf-8"))
+                    return
+
+                # 5. Static Assets
                 super().do_GET()
 
             def end_headers(self):
@@ -509,16 +636,25 @@ class ControllerServer:
             "latency_ms": 0
         }
 
-        # Send initial handshake asking for PIN
+        # Check if desktop sent a pending invitation for this client IP
+        pending_inv = self.pending_invitations.get(client_ip)
+
+        # Send initial handshake asking for PIN (or auto-invite payload)
         try:
-            await websocket.send(json.dumps({
+            handshake = {
                 "type": "auth_required",
                 "software": "REMOTE4REAL",
                 "screen": self.screen_capturer.get_resolution(),
-                "server_time": time.time()
-            }))
+                "server_time": time.time(),
+                "has_invite": bool(pending_inv),
+                "server_name": socket.gethostname()
+            }
+            if pending_inv:
+                handshake["invite_pin"] = self.security_pin
+                handshake["type"] = "desktop_pair_invitation"
+            await websocket.send(json.dumps(handshake))
         except Exception as e:
-            logging.error(f"Error sending auth_required packet: {e}")
+            logging.error(f"Error sending handshake packet: {e}")
 
         try:
             async for message in websocket:
