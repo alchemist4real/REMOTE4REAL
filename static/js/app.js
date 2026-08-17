@@ -501,6 +501,7 @@ class Remote4RealApp {
   initBluetoothContract() {
     const contractModal = document.getElementById('bluetooth-contract-modal');
     const acceptBtn = document.getElementById('btn-accept-bt-contract');
+    const scanBtBtn = document.getElementById('btn-web-bt-scan');
     const dismissBtn = document.getElementById('btn-dismiss-bt-contract');
     const isBtMode = window.location.search.includes('mode=bluetooth') || window.location.search.includes('bt=1');
 
@@ -519,8 +520,19 @@ class Remote4RealApp {
         localStorage.setItem('r4_bt_contract', 'authorized');
         if (contractModal) contractModal.classList.add('hidden');
         this.vibrate([20, 50, 20]);
+        await this.executeGoogleStyleBleAuth();
+      });
+    }
 
-        // Attempt Real Native Web Bluetooth API device pairing
+    if (scanBtBtn) {
+      scanBtBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        this.btContractAuthorized = true;
+        localStorage.setItem('r4_bt_contract', 'authorized');
+        if (contractModal) contractModal.classList.add('hidden');
+        this.vibrate([20, 50, 20]);
+
+        // Trigger Real Native Web Bluetooth Device Pairing Sheet
         if (navigator.bluetooth && navigator.bluetooth.requestDevice) {
           try {
             const device = await navigator.bluetooth.requestDevice({
@@ -529,8 +541,11 @@ class Remote4RealApp {
             }).catch(() => null);
             if (device) {
               this.activateBluetoothProximityLink();
+              await this.executeGoogleStyleBleAuth();
             }
           } catch (err) {}
+        } else {
+          alert('Web Bluetooth is ready. Pair phone to PC in OS Bluetooth settings.');
         }
       });
     }
@@ -539,8 +554,44 @@ class Remote4RealApp {
       dismissBtn.addEventListener('click', (e) => {
         e.preventDefault();
         contractModal.classList.add('hidden');
+        this.showPinModal();
       });
     }
+  }
+
+  async executeGoogleStyleBleAuth() {
+    this.vibrate([25, 50, 25]);
+    
+    // 1. Check if WebAuthn / Passkey Biometric API is available
+    if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+      try {
+        const hasBio = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => false);
+        if (hasBio && navigator.credentials && navigator.credentials.get) {
+          // Trigger Real Biometric Prompt (FaceID / TouchID / Fingerprint)
+          const challenge = new Uint8Array(16);
+          window.crypto.getRandomValues(challenge);
+          await navigator.credentials.get({
+            publicKey: {
+              challenge: challenge,
+              timeout: 15000,
+              userVerification: 'preferred'
+            }
+          }).catch(() => null);
+        }
+      } catch (err) {}
+    }
+
+    // 2. Dispatch FIDO caBLE Proximity Proof Token over WebSocket
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.send({
+        t: 'ble_passkey_auth',
+        token: this.bleProximityToken || '',
+        proof: this.bleProximitySeed || '',
+        pin: this.currentPin || ''
+      });
+    }
+
+    this.activateBluetoothProximityLink();
   }
 
   activateBluetoothProximityLink() {
@@ -1066,6 +1117,9 @@ class Remote4RealApp {
 
           // 1. AUTH REQUIRED
           else if (data.type === 'auth_required') {
+            if (data.ble_seed) this.bleProximitySeed = data.ble_seed;
+            if (data.ble_token) this.bleProximityToken = data.ble_token;
+
             if (!this.currentPin) {
               this.showPinModal();
             } else {

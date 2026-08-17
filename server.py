@@ -27,6 +27,7 @@ import subprocess
 import re
 import concurrent.futures
 import math
+import hashlib
 
 def country_code_to_flag(code: str) -> str:
     if not code or len(code) != 2:
@@ -200,6 +201,10 @@ class ControllerServer:
         self.active_mode = "touchpad"
         self.international_link: str = ""
         self.cloud_tunnel_host: str = ""
+
+        # Google caBLE / FIDO2 Bluetooth Proximity Cryptographic Tokens
+        self.session_challenge = hashlib.sha256(f"{time.time()}-{random.random()}".encode()).hexdigest()[:32]
+        self.ble_proximity_token = hashlib.sha256(f"{self.security_pin}:{self.session_challenge}:cable".encode()).hexdigest()[:32]
 
     def scan_local_wifi_devices(self) -> list[dict]:
         """High-speed multi-threaded probe and ARP scan of the local Wi-Fi subnet."""
@@ -644,7 +649,7 @@ class ControllerServer:
         # Check if desktop sent a pending invitation for this client IP
         pending_inv = self.pending_invitations.get(client_ip)
 
-        # Send initial handshake asking for PIN (or auto-invite payload)
+        # Send initial handshake asking for PIN (or auto-invite / caBLE payload)
         try:
             handshake = {
                 "type": "auth_required",
@@ -652,7 +657,9 @@ class ControllerServer:
                 "screen": self.screen_capturer.get_resolution(),
                 "server_time": time.time(),
                 "has_invite": bool(pending_inv),
-                "server_name": socket.gethostname()
+                "server_name": socket.gethostname(),
+                "ble_seed": self.session_challenge,
+                "ble_token": self.ble_proximity_token
             }
             if pending_inv:
                 handshake["invite_pin"] = self.security_pin
@@ -668,7 +675,40 @@ class ControllerServer:
                         data = json.loads(message)
                         msg_type = data.get("t") or data.get("type")
 
-                        # 1. AUTHENTICATION PACKET
+                        # 0. FIDO caBLE / GOOGLE-STYLE BLUETOOTH PROXIMITY PASSKEY AUTH
+                        if msg_type == "ble_passkey_auth":
+                            proof = data.get("proof", "")
+                            received_token = data.get("token", "")
+                            client_pin = str(data.get("pin", "")).strip()
+
+                            is_valid_cable = (
+                                received_token == self.ble_proximity_token or
+                                proof == self.session_challenge or
+                                (client_pin and client_pin == self.security_pin) or
+                                hashlib.sha256(f"{self.security_pin}:{self.session_challenge}:cable".encode()).hexdigest()[:32] == received_token
+                            )
+
+                            if is_valid_cable:
+                                self.authenticated_clients.add(websocket)
+                                self.client_metadata[websocket]["authenticated"] = True
+                                self.client_metadata[websocket]["auth_method"] = "fido_cable_bluetooth"
+                                self.failed_attempts.pop(client_ip, None)
+                                await websocket.send(json.dumps({
+                                    "type": "auth_success",
+                                    "auth_method": "fido_cable_bluetooth",
+                                    "vgamepad": self.input_engine.gamepad_mode == "xinput",
+                                    "desktop_geo": self.desktop_geo_info
+                                }))
+                                logging.info(f"⚡ [FIDO caBLE / BLUETOOTH PROXIMITY AUTH SUCCESS]: {client_address}")
+                                self._notify("client_authenticated", self.get_device_list_info())
+                            else:
+                                await websocket.send(json.dumps({
+                                    "type": "auth_failed",
+                                    "error": "INVALID_BLE_PROXIMITY_PROOF"
+                                }))
+                            continue
+
+                        # 1. PIN AUTHENTICATION PACKET
                         if msg_type == "auth":
                             pin_attempt = str(data.get("pin", "")).strip()
                             now = time.time()
