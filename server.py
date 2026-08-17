@@ -328,7 +328,7 @@ class ControllerServer:
         # 2. Launch Cloudflare Quick Tunnel on WebSocket Port (8765)
         if os.path.exists(cf_path):
             try:
-                cmd = [cf_path, "tunnel", "--url", f"http://127.0.0.1:{self.ws_port}"]
+                cmd = [cf_path, "tunnel", "--url", f"http://127.0.0.1:{self.ws_port}", "--no-chunked-encoding"]
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
                 
                 # Monitor output in background thread to parse tunnel URL
@@ -932,11 +932,19 @@ class ControllerServer:
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
 
+            async def _process_request(connection, request):
+                # Intercept Cloudflare HTTP health-check probes on the WS port and return 200 OK
+                conn_header = request.headers.get("Connection", "").lower()
+                if "upgrade" not in conn_header and request.headers.get("Upgrade", "").lower() != "websocket":
+                    return connection.respond(200, [("Content-Type", "text/plain"), ("Access-Control-Allow-Origin", "*")], b"OK\n")
+                return None
+
             async def _start_ws():
                 self.ws_server = await websockets.serve(
                     self._handle_client,
                     "0.0.0.0",
                     self.ws_port,
+                    process_request=_process_request,
                     ping_interval=10,
                     ping_timeout=20,
                     max_size=16_000_000

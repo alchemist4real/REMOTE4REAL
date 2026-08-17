@@ -498,12 +498,10 @@ class Remote4RealApp {
     }
   }
 
-  // ==========================================
-  // EARLY BLUETOOTH CONTRACT & PERMISSION
-  // ==========================================
   initBluetoothContract() {
     const contractModal = document.getElementById('bluetooth-contract-modal');
     const acceptBtn = document.getElementById('btn-accept-bt-contract');
+    const dismissBtn = document.getElementById('btn-dismiss-bt-contract');
     const isBtMode = window.location.search.includes('mode=bluetooth') || window.location.search.includes('bt=1');
 
     // Prompt early: immediately if in BT mode or upon proximity, otherwise short 500ms delay
@@ -998,6 +996,8 @@ class Remote4RealApp {
   // ==========================================
   initNetwork() {
     const params = new URLSearchParams(window.location.search);
+    const paramHost = params.get('host');
+    const paramPort = params.get('port') || '8080';
     const pin = params.get('pin') || params.get('auth') || this.currentPin;
     if (pin) {
       this.currentPin = pin;
