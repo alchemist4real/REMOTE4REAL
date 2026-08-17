@@ -1,14 +1,6 @@
 # ==============================================================================
-# REMOTE4REAL — Zero-Friction Environment Bootstrapper & Launcher
+# REMOTE4REAL -- Zero-Friction Environment Bootstrapper & Launcher
 # Engineered by alchemist4real
-#
-# Automatically detects and installs:
-# 1. Python 3.x runtime (via winget or direct download if missing)
-# 2. Virtual Environment (.venv) with isolated dependencies
-# 3. Required packages (websockets, qrcode, pillow, psutil, pywin32, vgamepad)
-# 4. Windows Firewall inbound rules for HTTP (8080) and WebSocket (8765)
-# 5. Desktop and Start Menu Shortcuts
-# 6. Runs System Diagnostic and launches REMOTE4REAL Desktop GUI
 # ==============================================================================
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -57,23 +49,20 @@ function Refresh-EnvPath {
 # BANNER
 # ------------------------------------------------------------------------------
 Write-Host ""
-Write-Host "  ██████╗ ███████╗███╗   ███╗ ██████╗ ████████╗███████╗██╗  ██╗██████╗ ███████╗ █████╗ ██╗     " -ForegroundColor Cyan
-Write-Host "  ██╔══██╗██╔════╝████╗ ████║██╔═══██╗╚══██╔══╝██╔════╝██║  ██║██╔══██╗██╔════╝██╔══██╗██║     " -ForegroundColor Cyan
-Write-Host "  ██████╔╝█████╗  ██╔████╔██║██║   ██║   ██║   █████╗  ███████║██████╔╝█████╗  ███████║██║     " -ForegroundColor Cyan
-Write-Host "  ██╔══██╗██╔══╝  ██║╚██╔╝██║██║   ██║   ██║   ██╔══╝  ╚════██║██╔══██╗██╔══╝  ██╔══██║██║     " -ForegroundColor Cyan
-Write-Host "  ██║  ██║███████╗██║ ╚═╝ ██║╚██████╔╝   ██║   ███████╗     ██║██║  ██║███████╗██║  ██║███████╗" -ForegroundColor Cyan
-Write-Host "  ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝    ╚═╝   ╚══════╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝" -ForegroundColor Cyan
-Write-Host "                                ZERO-FRICTION SETUP & LAUNCHER • BY ALCHEMIST4REAL           " -ForegroundColor DarkGray
+Write-Host "=================================================================" -ForegroundColor Cyan
+Write-Host "                  REMOTE4REAL PC COMPANION SERVER                " -ForegroundColor Cyan
+Write-Host "        ZERO-FRICTION ENVIRONMENT BOOTSTRAPPER & LAUNCHER        " -ForegroundColor Cyan
+Write-Host "                  ENGINEERED BY ALCHEMIST4REAL                   " -ForegroundColor DarkGray
+Write-Host "=================================================================" -ForegroundColor Cyan
 
 # ------------------------------------------------------------------------------
-# STEP 0: REPOSITORY & CODE UPDATE CHECK
+# STEP 0: REPOSITORY UPDATE SYNCHRONIZATION
 # ------------------------------------------------------------------------------
 if (Test-Path (Join-Path $PROJECT_ROOT ".git")) {
-    Write-Step "STEP 0: Repository Update Synchronization"
     if (Get-Command "git" -ErrorAction SilentlyContinue) {
+        Write-Step "STEP 0: Repository Update Synchronization"
         Write-Info "Checking for updates from remote repository..."
         try {
-            # Quick check if remote updates exist with 4s timeout
             $updateOutput = git -C "$PROJECT_ROOT" pull --rebase --autostash 2>&1
             if ($LASTEXITCODE -eq 0) {
                 Write-Success "Repository is synchronized with latest remote release."
@@ -81,10 +70,8 @@ if (Test-Path (Join-Path $PROJECT_ROOT ".git")) {
                 Write-Warn "Git pull notice: $updateOutput"
             }
         } catch {
-            Write-Warn "Unable to check git updates offline or without network."
+            Write-Warn "Unable to check git updates offline."
         }
-    } else {
-        Write-Info "Git command not found. Skipping repository sync."
     }
 }
 
@@ -95,13 +82,11 @@ Write-Step "STEP 1: Python Runtime Detection"
 
 $PYTHON_CMD = $null
 
-# Check current PATH
 if (Get-Command "python" -ErrorAction SilentlyContinue) {
     $PYTHON_CMD = "python"
 } elseif (Get-Command "py" -ErrorAction SilentlyContinue) {
     $PYTHON_CMD = "py"
 } else {
-    # Check common install locations
     $candidates = @(
         "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe",
         "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe",
@@ -124,7 +109,6 @@ if (Get-Command "python" -ErrorAction SilentlyContinue) {
 if (-not $PYTHON_CMD) {
     Write-Warn "Python was not detected on this machine. Commencing automated installation..."
     
-    # Try winget first
     if (Get-Command "winget" -ErrorAction SilentlyContinue) {
         Write-Info "Installing Python 3.11 via Windows Package Manager (winget)..."
         winget install Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
@@ -132,11 +116,9 @@ if (-not $PYTHON_CMD) {
         Start-Sleep -Seconds 3
     }
     
-    # Check if installed
     if (Get-Command "python" -ErrorAction SilentlyContinue) {
         $PYTHON_CMD = "python"
     } else {
-        # Fallback: Direct download Python installer
         Write-Info "Downloading official Python installer from python.org..."
         $installerUrl = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
         $tempInstaller = "$env:TEMP\python-3.11.9-installer.exe"
@@ -157,7 +139,7 @@ if (-not $PYTHON_CMD) {
 }
 
 if (-not $PYTHON_CMD) {
-    Write-Err "Could not automatically provision Python runtime. Please install Python 3.10+ from python.org with 'Add to PATH' enabled."
+    Write-Err "Could not automatically provision Python runtime. Please install Python 3.10+ from python.org with Add to PATH enabled."
     Read-Host "Press Enter to exit"
     exit 1
 }
@@ -178,7 +160,7 @@ if (-not (Test-Path $VENV_PY)) {
     Write-Info "Creating isolated virtual environment at .venv..."
     & $PYTHON_CMD -m venv $VENV_DIR
     if (-not (Test-Path $VENV_PY)) {
-        Write-Warn "Virtual environment creation fell back to direct Python runtime."
+        Write-Warn "Using direct Python runtime."
         $VENV_PY = $PYTHON_CMD
         $VENV_PIP = "pip"
     } else {
@@ -193,30 +175,26 @@ if (-not (Test-Path $VENV_PY)) {
 # ------------------------------------------------------------------------------
 Write-Step "STEP 3: Dependency Installation & Verification"
 
-Write-Info "Upgrading pip package manager..."
-& $VENV_PY -m pip install --upgrade pip --quiet 2>$null
-
 $REQ_FILE = Join-Path $PROJECT_ROOT "requirements.txt"
 if (Test-Path $REQ_FILE) {
-    Write-Info "Installing dependencies from requirements.txt..."
+    Write-Info "Verifying core dependencies..."
     & $VENV_PY -m pip install -r $REQ_FILE --quiet
-    Write-Success "Core packages installed (websockets, qrcode, pillow, psutil, pywin32, customtkinter)."
+    Write-Success "Core packages verified (websockets, qrcode, pillow, psutil, pywin32, customtkinter)."
 }
 
-# Try installing vgamepad for native Xbox 360 controller emulation
-Write-Info "Checking optional Xbox 360 virtual gamepad driver (vgamepad)..."
+# Optional vgamepad
 try {
     & $VENV_PY -c "import vgamepad" 2>$null
     if ($LASTEXITCODE -eq 0) {
         Write-Success "vgamepad driver is active."
     } else {
-        Write-Info "Attempting to install vgamepad package..."
+        Write-Info "Attempting to install optional vgamepad package..."
         & $VENV_PY -m pip install vgamepad --quiet 2>$null
         & $VENV_PY -c "import vgamepad" 2>$null
         if ($LASTEXITCODE -eq 0) {
             Write-Success "vgamepad installed successfully."
         } else {
-            Write-Info "vgamepad not active: Controller will use high-speed DirectX Keyboard/Mouse mode."
+            Write-Info "Controller will use high-speed DirectX Keyboard/Mouse mode."
         }
     }
 } catch {
@@ -224,7 +202,7 @@ try {
 }
 
 # ------------------------------------------------------------------------------
-# STEP 4: WINDOWS FIREWALL CONFIGURATION (OPTIONAL / NON-BLOCKING)
+# STEP 4: WINDOWS FIREWALL CONFIGURATION
 # ------------------------------------------------------------------------------
 Write-Step "STEP 4: Network & Firewall Permissions"
 
@@ -238,7 +216,7 @@ if ($isAdmin) {
             New-NetFirewallRule -DisplayName "REMOTE4REAL HTTP Server" -Direction Inbound -LocalPort 8080 -Protocol TCP -Action Allow -Profile Any | Out-Null
             Write-Success "Firewall rule created for HTTP Port 8080."
         } else {
-            Write-Success "Firewall rule for Port 8080 already active."
+            Write-Success "Firewall rule for Port 8080 active."
         }
 
         $ruleWs = Get-NetFirewallRule -DisplayName "REMOTE4REAL WebSocket Server" -ErrorAction SilentlyContinue
@@ -246,10 +224,10 @@ if ($isAdmin) {
             New-NetFirewallRule -DisplayName "REMOTE4REAL WebSocket Server" -Direction Inbound -LocalPort 8765 -Protocol TCP -Action Allow -Profile Any | Out-Null
             Write-Success "Firewall rule created for WebSocket Port 8765."
         } else {
-            Write-Success "Firewall rule for Port 8765 already active."
+            Write-Success "Firewall rule for Port 8765 active."
         }
     } catch {
-        Write-Warn "Could not automatically add firewall rule: $($_.Exception.Message)"
+        Write-Warn "Firewall rule configuration notice: $($_.Exception.Message)"
     }
 } else {
     Write-Info "Non-admin mode: Windows will prompt for standard network access on first connection."
@@ -275,7 +253,7 @@ if (-not (Test-Path $DESKTOP_SHORTCUT)) {
         $Shortcut = $WshShell.CreateShortcut($DESKTOP_SHORTCUT)
         $Shortcut.TargetPath = (Join-Path $PROJECT_ROOT "run.bat")
         $Shortcut.WorkingDirectory = $PROJECT_ROOT
-        $Shortcut.Description = "REMOTE4REAL — PC Companion Server"
+        $Shortcut.Description = "REMOTE4REAL -- PC Companion Server"
         $iconPath = Join-Path $PROJECT_ROOT "app_icon.ico"
         if (Test-Path $iconPath) {
             $Shortcut.IconLocation = $iconPath

@@ -14,13 +14,11 @@ $ErrorActionPreference = "Continue"
 
 function Write-R4Header {
     Write-Host ""
-    Write-Host "  ██████╗ ███████╗███╗   ███╗ ██████╗ ████████╗███████╗██╗  ██╗██████╗ ███████╗ █████╗ ██╗     " -ForegroundColor Cyan
-    Write-Host "  ██╔══██╗██╔════╝████╗ ████║██╔═══██╗╚══██╔══╝██╔════╝██║  ██║██╔══██╗██╔════╝██╔══██╗██║     " -ForegroundColor Cyan
-    Write-Host "  ██████╔╝█████╗  ██╔████╔██║██║   ██║   ██║   █████╗  ███████║██████╔╝█████╗  ███████║██║     " -ForegroundColor Cyan
-    Write-Host "  ██╔══██╗██╔══╝  ██║╚██╔╝██║██║   ██║   ██║   ██╔══╝  ╚════██║██╔══██╗██╔══╝  ██╔══██║██║     " -ForegroundColor Cyan
-    Write-Host "  ██║  ██║███████╗██║ ╚═╝ ██║╚██████╔╝   ██║   ███████╗     ██║██║  ██║███████╗██║  ██║███████╗" -ForegroundColor Cyan
-    Write-Host "  ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝    ╚═╝   ╚══════╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝" -ForegroundColor Cyan
-    Write-Host "                            ALL-IN-ONE ONE-COMMAND INSTALLER • BY ALCHEMIST4REAL              " -ForegroundColor DarkGray
+    Write-Host "=================================================================" -ForegroundColor Cyan
+    Write-Host "                  REMOTE4REAL PC COMPANION                       " -ForegroundColor Cyan
+    Write-Host "          ALL-IN-ONE ONE-COMMAND INSTALLER & LAUNCHER            " -ForegroundColor Cyan
+    Write-Host "                  ENGINEERED BY ALCHEMIST4REAL                   " -ForegroundColor DarkGray
+    Write-Host "=================================================================" -ForegroundColor Cyan
     Write-Host ""
 }
 
