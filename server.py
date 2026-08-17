@@ -62,27 +62,91 @@ def format_precision_distance(distance_km: float) -> str:
         mm = total_meters * 1000.0
         return f"{mm:.1f} mm"
 
+LOUD_ALARM_WAV_PATH = os.path.join(os.environ.get("TEMP", os.path.dirname(os.path.abspath(__file__))), "r4_loud_alarm.wav")
+
+def _ensure_loud_alarm_wav() -> str:
+    """Synthesizes a loud, piercing, multi-stage emergency beacon WAV file for finding this PC."""
+    try:
+        if os.path.exists(LOUD_ALARM_WAV_PATH) and os.path.getsize(LOUD_ALARM_WAV_PATH) > 50000:
+            return LOUD_ALARM_WAV_PATH
+
+        import wave, struct, math
+        sample_rate = 44100
+        duration = 4.2  # 4.2 seconds of maximum-energy alarm
+        num_samples = int(sample_rate * duration)
+        frames = bytearray()
+
+        for i in range(num_samples):
+            t = i / sample_rate
+            # Stage 1: Ascending dual emergency ping (0.0s - 0.8s)
+            # Stage 2: Rhythmic piercing warble siren (0.8s - 3.2s)
+            # Stage 3: Double high-energy beacon blast (3.2s - 4.2s)
+            if t < 0.8:
+                cycle = t * 2.5
+                freq = 1100 + 900 * (cycle % 1.0)
+                amp_env = 1.0
+            elif t < 3.2:
+                siren_t = t - 0.8
+                freq = 950 + 1350 * (0.5 + 0.5 * math.sin(2 * math.pi * 3.2 * siren_t))
+                amp_env = 1.0
+            else:
+                pulse_t = t - 3.2
+                freq = 1800 if (pulse_t * 5) % 1.0 < 0.6 else 1200
+                amp_env = 1.0 if (pulse_t * 5) % 1.0 < 0.85 else 0.05
+
+            # Multi-harmonic synthesis for maximum punch and room resonance
+            s1 = math.sin(2 * math.pi * freq * t)
+            s2 = 0.55 * math.sin(4 * math.pi * freq * t)
+            s3 = 0.35 * (1.0 if (t * freq * 2) % 2 < 1 else -1.0) # square harmonic bite
+            val = int(max(-32760, min(32760, (s1 + s2 + s3) / 1.9 * 32700 * amp_env)))
+            frames.extend(struct.pack('<hh', val, val))
+
+        with wave.open(LOUD_ALARM_WAV_PATH, 'wb') as w:
+            w.setnchannels(2)
+            w.setsampwidth(2)
+            w.setframerate(sample_rate)
+            w.writeframes(frames)
+            
+        return LOUD_ALARM_WAV_PATH
+    except Exception as e:
+        logging.warning(f"Could not synthesize loud alarm WAV: {e}")
+        return ""
+
 def ring_desktop_alarm():
-    """Rings a loud multi-tone alert chime on PC speakers to find this desktop."""
-    def _beep_worker():
+    """Rings a loud multi-stage emergency beacon alarm on PC speakers to find this desktop."""
+    def _alarm_worker():
+        played_wav = False
         try:
             import winsound
-            tones = [
-                (1046, 120), (1318, 120), (1567, 120), (2093, 280),
-                (1046, 120), (1318, 120), (1567, 120), (2093, 400)
-            ]
-            for freq, dur in tones:
-                winsound.Beep(freq, dur)
-                time.sleep(0.03)
-        except Exception:
+            wav_file = _ensure_loud_alarm_wav()
+            if wav_file and os.path.exists(wav_file):
+                # Play loud synthesized stereo siren asynchronously through Windows multimedia sound system
+                winsound.PlaySound(wav_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
+                played_wav = True
+        except Exception as e:
+            logging.debug(f"PlaySound WAV error: {e}")
+
+        # Fallback / Parallel tone reinforcement
+        if not played_wav:
             try:
                 import winsound
-                for _ in range(4):
-                    winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
-                    time.sleep(0.2)
+                tones = [
+                    (1046, 150), (1318, 150), (1567, 150), (2093, 350),
+                    (1046, 150), (1318, 150), (1567, 150), (2093, 500)
+                ]
+                for freq, dur in tones:
+                    winsound.Beep(freq, dur)
+                    time.sleep(0.02)
             except Exception:
-                pass
-    threading.Thread(target=_beep_worker, daemon=True).start()
+                try:
+                    import winsound
+                    for _ in range(5):
+                        winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
+                        time.sleep(0.15)
+                except Exception:
+                    pass
+
+    threading.Thread(target=_alarm_worker, daemon=True).start()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
