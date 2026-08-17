@@ -491,12 +491,20 @@ class Remote4RealDesktopGUI:
                     self.selected_ip = item["ip"]
                     break
         elif mode == "bluetooth":
+            found_bt = False
             for idx, item in enumerate(self.ip_choices):
                 if item.get("is_bt"):
                     if idx < len(self.combo_options):
                         self.combo_ip.set(self.combo_options[idx])
                     self.selected_ip = item["ip"]
+                    found_bt = True
                     break
+            if not found_bt:
+                # Use primary IP with mode=bluetooth smart contract pairing
+                for item in self.ip_choices:
+                    if not item.get("is_vpn"):
+                        self.selected_ip = item["ip"]
+                        break
         elif mode == "vpn":
             found_vpn = False
             for idx, item in enumerate(self.ip_choices):
@@ -506,20 +514,8 @@ class Remote4RealDesktopGUI:
                     self.selected_ip = item["ip"]
                     found_vpn = True
                     break
-            if not found_vpn:
-                messagebox.showinfo(
-                    "Worldwide / Tailscale Setup",
-                    "No active VPN (Tailscale/ZeroTier) detected on this PC.\n\n"
-                    "Tip: Install Tailscale on PC & Phone for instant 1-click international connection, "
-                    "or enter your Cloudflare Tunnel URL in 'CUSTOM GLOBAL HOST'."
-                )
-        else:
-            for idx, item in enumerate(self.ip_choices):
-                if item.get("is_bt"):
-                    if idx < len(self.combo_options):
-                        self.combo_ip.set(self.combo_options[idx])
-                    self.selected_ip = item["ip"]
-                    break
+            if not found_vpn and self.server.international_link:
+                self.selected_ip = "cloud"
 
         self.update_qr_code()
 
@@ -531,7 +527,15 @@ class Remote4RealDesktopGUI:
         self.update_qr_code()
 
     def update_qr_code(self):
-        url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}"
+        if self.connection_mode == "bluetooth":
+            url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}&mode=bluetooth"
+        elif self.connection_mode == "vpn" and self.selected_ip == "cloud" and self.server.international_link:
+            url = self.server.international_link
+        elif hasattr(self, 'custom_host') and self.custom_host:
+            url = f"http://{self.custom_host}:{self.server.http_port}/?pin={self.server.security_pin}"
+        else:
+            url = f"http://{self.selected_ip}:{self.server.http_port}/?pin={self.server.security_pin}"
+
         self.url_label.configure(text=url)
 
         qr = qrcode.QRCode(box_size=5, border=1)

@@ -38,6 +38,13 @@ class Remote4RealApp {
     this.btContractAuthorized = localStorage.getItem('r4_bt_contract') === 'authorized';
     this.hasAutoTriggeredBt = false;
 
+    const params = new URLSearchParams(window.location.search);
+    const isBtMode = params.get('mode') === 'bluetooth';
+    if (isBtMode) {
+      this.btContractAuthorized = true;
+      localStorage.setItem('r4_bt_contract', 'authorized');
+    }
+
     this.initSecurityUI();
     this.initScannerUI();
     this.initModeDropdown();
@@ -48,6 +55,10 @@ class Remote4RealApp {
     this.initBluetoothContract();
     this.detectClientGeolocation();
     this.initNetwork();
+
+    if (isBtMode) {
+      setTimeout(() => this.activateBluetoothProximityLink(), 800);
+    }
     this.initUI();
     this.initRotation();
     this.initSwipeGestures();
