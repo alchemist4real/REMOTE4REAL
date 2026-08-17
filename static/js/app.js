@@ -941,12 +941,26 @@ class Remote4RealApp {
   // ==========================================
   initNetwork() {
     const params = new URLSearchParams(window.location.search);
-    const host = window.location.hostname || 'localhost';
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const paramHost = params.get('host');
+    const paramPort = params.get('port') || '8080';
+    const pin = params.get('pin') || this.currentPin;
+
+    // If loaded on HTTPS (e.g. Vercel) with raw numeric IP host, redirect to HTTP directly
+    if (window.location.protocol === 'https:' && paramHost && /^(?:\d{1,3}\.){3}\d{1,3}$/.test(paramHost)) {
+      window.location.href = `http://${paramHost}:${paramPort}/?pin=${pin}`;
+      return;
+    }
+
+    const host = paramHost || window.location.hostname || 'localhost';
+    const isHttps = window.location.protocol === 'https:' || host.includes('trycloudflare.com') || host.includes('pinggy.link');
+    const protocol = isHttps ? 'wss:' : 'ws:';
     
     let wsUrl;
     if (params.get('ws')) {
-      wsUrl = params.get('ws');
+      const rawWs = params.get('ws');
+      wsUrl = (rawWs.startsWith('ws://') || rawWs.startsWith('wss://')) ? rawWs : `wss://${rawWs}`;
+    } else if (host.includes('trycloudflare.com') || host.includes('pinggy.link')) {
+      wsUrl = `wss://${host}`;
     } else {
       const customWsPort = params.get('ws_port') || (window.location.port === '8080' ? 8765 : (window.location.port || 8765));
       wsUrl = `${protocol}//${host}:${customWsPort}`;

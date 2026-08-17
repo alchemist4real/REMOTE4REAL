@@ -196,22 +196,61 @@ class ControllerServer:
         self.active_mode = "touchpad"
 
     def _auto_setup_international_signal(self):
-        """Automatically provisions zero-config international cloud signal routing."""
+        """Automatically provisions zero-config international HTTPS/WSS cloud tunnel."""
+        temp_dir = os.environ.get("TEMP", os.path.dirname(os.path.abspath(__file__)))
+        cf_path = os.path.join(temp_dir, "cloudflared.exe")
+
+        # 1. Ensure cloudflared binary is available
+        if not os.path.exists(cf_path):
+            try:
+                cf_url = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"
+                logging.info(f"Downloading Cloudflare Quick Tunnel binary to {cf_path}...")
+                urllib.request.urlretrieve(cf_url, cf_path)
+                logging.info("Cloudflare Quick Tunnel binary downloaded successfully.")
+            except Exception as e:
+                logging.warning(f"Could not download cloudflared binary: {e}")
+
+        # 2. Launch Cloudflare Quick Tunnel on WebSocket Port (8765)
+        if os.path.exists(cf_path):
+            try:
+                cmd = [cf_path, "tunnel", "--url", f"http://127.0.0.1:{self.ws_port}"]
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+                
+                # Monitor output in background thread to parse tunnel URL
+                def _monitor_cf():
+                    start_t = time.time()
+                    while time.time() - start_t < 25:
+                        line = proc.stdout.readline()
+                        if not line:
+                            break
+                        m = re.search(r"https://([a-zA-Z0-9-]+\.trycloudflare\.com)", line)
+                        if m:
+                            domain = m.group(1)
+                            full_url = f"https://remote4real.vercel.app/?ws=wss://{domain}&pin={self.security_pin}"
+                            self.international_link = full_url
+                            logging.info(f"🌐 [WORLDWIDE SECURE CLOUD LINK READY]: {full_url}")
+                            self._notify("international_link_ready", {"url": full_url, "host": domain})
+                            break
+                
+                threading.Thread(target=_monitor_cf, daemon=True).start()
+                return
+            except Exception as e:
+                logging.warning(f"Failed to launch Cloudflare quick tunnel: {e}")
+
+        # Fallback to direct public IP
         try:
-            # 1. Fetch public WAN address for direct international transit
             req = urllib.request.Request("https://api.ipify.org?format=json", headers={"User-Agent": "REMOTE4REAL/2.0"})
             with urllib.request.urlopen(req, timeout=4.0) as res:
                 data = json.loads(res.read().decode())
                 pub_ip = data.get("ip")
                 if pub_ip:
-                    self.international_link = f"https://remote4real.vercel.app/?host={pub_ip}&port={self.http_port}&ws={self.ws_port}&pin={self.security_pin}"
-                    logging.info(f"International Auto-Setup Link Ready: {self.international_link}")
+                    self.international_link = f"http://{pub_ip}:{self.http_port}/?pin={self.security_pin}"
+                    logging.info(f"International Direct IP Link Ready: {self.international_link}")
                     self._notify("international_link_ready", {"url": self.international_link, "ip": pub_ip})
         except Exception as e:
-            # Fallback to desktop geo IP if available
             if self.desktop_geo_info.get("ip"):
                 pub_ip = self.desktop_geo_info.get("ip")
-                self.international_link = f"https://remote4real.vercel.app/?host={pub_ip}&port={self.http_port}&ws={self.ws_port}&pin={self.security_pin}"
+                self.international_link = f"http://{pub_ip}:{self.http_port}/?pin={self.security_pin}"
                 self._notify("international_link_ready", {"url": self.international_link, "ip": pub_ip})
 
     def _resolve_desktop_geo(self):

@@ -938,7 +938,10 @@ class Remote4RealDesktopGUI:
         elif event == "international_link_ready":
             url = data.get("url", "")
             if url:
-                self.lbl_last_action.configure(text=f"🌐 INTERNATIONAL AUTO-ROUTING ACTIVE: {url[:45]}...")
+                self.lbl_last_action.configure(text=f"🌐 WORLDWIDE CLOUD LINK READY: {url[:50]}...")
+                if self.connection_mode == "vpn":
+                    self.selected_ip = "cloud"
+                    self.update_qr_code()
 
         elif event in ("client_authenticated", "client_disconnected", "client_geo_updated"):
             devices = data if isinstance(data, list) else []
