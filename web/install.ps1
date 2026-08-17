@@ -1,5 +1,5 @@
 # ==============================================================================
-# REMOTE4REAL — One-Command Remote Installer & Bootstrapper
+# REMOTE4REAL -- One-Command Remote Installer & Bootstrapper
 # Engineered by alchemist4real
 #
 # Usage:
