@@ -138,7 +138,9 @@ html, body {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100%;
+  box-sizing: border-box;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
   padding-left: var(--safe-left);
@@ -400,21 +402,31 @@ html, body {
 #view-container {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   position: relative;
   overflow: hidden;
   background: var(--bg-void);
+  box-sizing: border-box;
 }
 
 .controller-mode-view {
   position: absolute;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   display: none;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .controller-mode-view.active {
@@ -648,10 +660,12 @@ html, body {
    2. FULL VIRTUAL KEYBOARD (mode-keyboard)
    ========================================================= */
 #mode-keyboard {
-  padding: 4px 6px;
+  padding: 3px 5px;
   height: 100%;
   width: 100%;
+  max-height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .virtual-keyboard-container {
@@ -659,8 +673,12 @@ html, body {
   flex-direction: column;
   height: 100%;
   width: 100%;
-  gap: 3px;
+  max-height: 100%;
+  gap: 2px;
   justify-content: space-between;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
 }
 
 .vkey-row {
@@ -669,24 +687,29 @@ html, body {
   width: 100%;
   flex: 1;
   min-height: 0;
+  max-height: 52px;
+  align-items: stretch;
 }
 
 .vkey-fn-row {
   overflow-x: auto;
   scrollbar-width: none;
   flex: 0.8;
+  max-height: 36px;
 }
 .vkey-fn-row::-webkit-scrollbar { display: none; }
 
 .vkey {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
   background: var(--bg-card);
-  border: 1.5px solid var(--border-dark);
+  border: 1px solid var(--border-dark);
   border-radius: 3px;
   color: var(--ink-primary);
   font-family: var(--font-primary);
-  font-size: 0.75rem;
+  font-size: clamp(0.6rem, 2.5vw, 0.76rem);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -694,6 +717,7 @@ html, body {
   cursor: pointer;
   box-shadow: 0 1px 0 var(--border-dark);
   touch-action: manipulation;
+  box-sizing: border-box;
 }
 
 .vkey:active, .vkey.active {
@@ -714,16 +738,16 @@ html, body {
 }
 
 .vkey-fn-row .vkey {
-  padding: 0 6px;
+  padding: 0 5px;
   flex-shrink: 0;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   background: var(--bg-surface);
 }
 
-.vkey-tab { flex: 1.3; font-size: 0.68rem; }
-.vkey-caps { flex: 1.3; font-size: 0.68rem; }
-.vkey-enter { flex: 1.6; font-size: 0.72rem; background: var(--bg-surface); }
-.vkey-mod { flex: 1.2; font-size: 0.68rem; background: var(--bg-surface); }
+.vkey-tab { flex: 1.3; font-size: 0.65rem; }
+.vkey-caps { flex: 1.3; font-size: 0.65rem; }
+.vkey-enter { flex: 1.6; font-size: 0.68rem; background: var(--bg-surface); }
+.vkey-mod { flex: 1.2; font-size: 0.65rem; background: var(--bg-surface); }
 .vkey-space { flex: 3.5; }
 .vkey-bksp { flex: 1.4; background: var(--bg-surface); }
 
@@ -731,10 +755,12 @@ html, body {
    3. KEYS + TRACKPAD SPLIT (mode-keypad)
    ========================================================= */
 #mode-keypad {
-  padding: 4px 6px;
+  padding: 3px 5px;
   height: 100%;
   width: 100%;
+  max-height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .keypad-split-container {
@@ -742,30 +768,36 @@ html, body {
   flex-direction: column;
   height: 100%;
   width: 100%;
-  gap: 4px;
+  max-height: 100%;
+  gap: 3px;
+  min-height: 0;
+  flex: 1;
+  box-sizing: border-box;
 }
 
 .keypad-touchpad-box {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-height: 0;
+  box-sizing: border-box;
 }
 
 .compact-mouse-bar {
-  height: 32px;
+  height: 28px;
 }
 .compact-mouse-bar .mouse-btn {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
 }
 
 .keypad-keyboard-box {
-  flex: 1.4;
+  flex: 1.2;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-height: 0;
+  box-sizing: border-box;
 }
 
 /* =========================================================
