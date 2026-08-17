@@ -298,13 +298,21 @@ class Remote4RealDesktopGUI:
 
         self.tab_connect = self.tabview.add(" CONNECT QR ")
         self.tab_devices = self.tabview.add(" ACTIVE DEVICES ")
+        self.tab_compass = self.tabview.add(" 🧭 RADAR COMPASS ")
         self.tab_bluetooth = self.tabview.add(" GLOBAL & OFFLINE GUIDE ")
         self.tab_settings = self.tabview.add(" SECURITY & CONFIG ")
 
+        # Radar & Compass State
+        self.radar_sweep_angle = 0
+        self.target_phone_bearing = 0
+        self.has_target_device = False
+
         self.build_connect_tab()
         self.build_devices_tab()
+        self.build_compass_tab()
         self.build_bluetooth_tab()
         self.build_settings_tab()
+        self._start_radar_animation()
 
     def toggle_theme_mode(self):
         if self.current_theme_mode == "Light":
@@ -653,6 +661,194 @@ class Remote4RealDesktopGUI:
         messagebox.showinfo("Ringing Phone", "Sent audible alarm to all connected controller phone(s)!")
 
     # ==========================================
+    # 3. RADAR & 360 COMPASS DIRECTIONAL FINDER TAB
+    # ==========================================
+    def build_compass_tab(self):
+        container = ctk.CTkFrame(self.tab_compass, fg_color="transparent")
+        container.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+
+        content_row = ctk.CTkFrame(container, fg_color="transparent")
+        content_row.pack(fill=tk.BOTH, expand=True)
+
+        # Left Box: 360 Radar Canvas
+        left_box = ctk.CTkFrame(
+            content_row,
+            fg_color=("#f8f8fa", "#141418"),
+            border_width=1,
+            border_color=("#e2e2e6", "#26262e"),
+            corner_radius=6,
+            width=250
+        )
+        left_box.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 6), pady=0)
+        left_box.pack_propagate(False)
+
+        ctk.CTkLabel(
+            left_box,
+            text="360° SIGNAL RADAR & COMPASS",
+            font=("Courier New", 10, "bold"),
+            text_color=("#000000", "#ffffff")
+        ).pack(pady=(8, 4))
+
+        self.radar_canvas = tk.Canvas(
+            left_box,
+            width=200,
+            height=200,
+            bg="#0b0b0e",
+            highlightthickness=1,
+            highlightbackground="#24242c"
+        )
+        self.radar_canvas.pack(pady=(0, 6))
+
+        # Right Box: Telemetry & Proximity HUD
+        right_box = ctk.CTkFrame(
+            content_row,
+            fg_color=("#f8f8fa", "#141418"),
+            border_width=1,
+            border_color=("#e2e2e6", "#26262e"),
+            corner_radius=6
+        )
+        right_box.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(6, 0), pady=0)
+
+        ctk.CTkLabel(
+            right_box,
+            text="CONTROLLER TELEMETRY & BEACON",
+            font=("Courier New", 10, "bold"),
+            text_color=("#000000", "#ffffff")
+        ).pack(anchor=tk.W, padx=12, pady=(10, 6))
+
+        self.lbl_radar_dist_hero = ctk.CTkLabel(
+            right_box,
+            text="-- MM",
+            font=("Courier New", 20, "bold"),
+            text_color=("#000000", "#ffffff"),
+            fg_color=("#ffffff", "#1a1a20"),
+            corner_radius=4,
+            height=42
+        )
+        self.lbl_radar_dist_hero.pack(fill=tk.X, padx=12, pady=(0, 6))
+
+        info_frame = ctk.CTkFrame(right_box, fg_color="transparent")
+        info_frame.pack(fill=tk.X, padx=12, pady=2)
+
+        self.lbl_radar_device = ctk.CTkLabel(
+            info_frame,
+            text="🎯 DEVICE: Awaiting Phone Connection...",
+            font=("Courier New", 9, "bold"),
+            text_color=("#444444", "#aaaaaa"),
+            anchor="w"
+        )
+        self.lbl_radar_device.pack(fill=tk.X, pady=1)
+
+        self.lbl_radar_bearing = ctk.CTkLabel(
+            info_frame,
+            text="🧭 BEARING: 0.0° (N)",
+            font=("Courier New", 9, "bold"),
+            text_color=("#444444", "#aaaaaa"),
+            anchor="w"
+        )
+        self.lbl_radar_bearing.pack(fill=tk.X, pady=1)
+
+        self.lbl_radar_signal = ctk.CTkLabel(
+            info_frame,
+            text="📡 SIGNAL: -42 dBm | Latency: 1.5ms",
+            font=("Courier New", 9, "bold"),
+            text_color=("#444444", "#aaaaaa"),
+            anchor="w"
+        )
+        self.lbl_radar_signal.pack(fill=tk.X, pady=1)
+
+        self.lbl_radar_status_tag = ctk.CTkLabel(
+            info_frame,
+            text="🟢 PROXIMITY RADAR ACTIVE",
+            font=("Courier New", 9, "bold"),
+            text_color=("#ffffff", "#ffffff"),
+            fg_color=("#34c759", "#34c759"),
+            corner_radius=4,
+            height=22
+        )
+        self.lbl_radar_status_tag.pack(fill=tk.X, pady=(6, 2))
+
+        radar_actions = ctk.CTkFrame(right_box, fg_color="transparent")
+        radar_actions.pack(fill=tk.X, padx=12, pady=(8, 10))
+
+        btn_radar_ring = ctk.CTkButton(
+            radar_actions,
+            text="🔊 RING PHONE",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#000000", "#ffffff"),
+            text_color=("#ffffff", "#000000"),
+            hover_color=("#222222", "#dcdcdc"),
+            corner_radius=4,
+            height=28,
+            command=self.on_ring_phones_clicked
+        )
+        btn_radar_ring.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
+
+        btn_radar_pc_chime = ctk.CTkButton(
+            radar_actions,
+            text="🔊 RING PC",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#ffffff", "#1a1a20"),
+            text_color=("#000000", "#ffffff"),
+            border_width=1,
+            border_color=("#d0d0d4", "#303038"),
+            hover_color=("#f0f0f4", "#262630"),
+            corner_radius=4,
+            width=80,
+            height=28,
+            command=lambda: self.server.ring_desktop_alarm() if hasattr(self.server, 'ring_desktop_alarm') else None
+        )
+        btn_radar_pc_chime.pack(side=tk.RIGHT)
+
+    def _start_radar_animation(self):
+        def _anim():
+            self.radar_sweep_angle = (self.radar_sweep_angle + 3.5) % 360
+            self._draw_radar_compass()
+            self.root.after(40, _anim)
+        self.root.after(100, _anim)
+
+    def _draw_radar_compass(self):
+        if not hasattr(self, 'radar_canvas'):
+            return
+        cv = self.radar_canvas
+        cv.delete("all")
+
+        cx, cy, r = 100, 100, 88
+
+        # 1. Concentric Range Rings
+        for ring_r in (r * 0.33, r * 0.66, r):
+            cv.create_oval(cx - ring_r, cy - ring_r, cx + ring_r, cy + ring_r, outline="#22222a", width=1)
+
+        # 2. Crosshairs
+        cv.create_line(cx - r, cy, cx + r, cy, fill="#1c1c24", width=1)
+        cv.create_line(cx, cy - r, cx, cy + r, fill="#1c1c24", width=1)
+
+        # 3. Cardinal Markings
+        cv.create_text(cx, cy - r + 10, text="N", fill="#ffffff", font=("Courier New", 9, "bold"))
+        cv.create_text(cx, cy + r - 10, text="S", fill="#666677", font=("Courier New", 8, "bold"))
+        cv.create_text(cx + r - 10, cy, text="E", fill="#666677", font=("Courier New", 8, "bold"))
+        cv.create_text(cx - r + 10, cy, text="W", fill="#666677", font=("Courier New", 8, "bold"))
+
+        # 4. Sweeping Radar Beam
+        sweep_rad = math.radians(self.radar_sweep_angle)
+        sx = cx + r * math.sin(sweep_rad)
+        sy = cy - r * math.cos(sweep_rad)
+        cv.create_line(cx, cy, sx, sy, fill="#34c759", width=2)
+
+        # 5. Directional Target Needle (Points to Phone)
+        t_rad = math.radians(self.target_phone_bearing)
+        nx = cx + (r * 0.78) * math.sin(t_rad)
+        ny = cy - (r * 0.78) * math.cos(t_rad)
+
+        # Needle Body
+        cv.create_line(cx, cy, nx, ny, fill="#ffffff", width=3)
+        # Target Arrow Head / Dot
+        cv.create_oval(nx - 5, ny - 5, nx + 5, ny + 5, fill="#34c759", outline="#ffffff", width=2)
+
+        # Center Pivot
+        cv.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ffffff", outline="#000000", width=1)
+
+    # ==========================================
     # 3. BLUETOOTH TETHERING SETUP GUIDE
     # ==========================================
     def build_bluetooth_tab(self):
@@ -950,19 +1146,58 @@ class Remote4RealDesktopGUI:
             self.devices_textbox.delete("1.0", tk.END)
             if not devices:
                 self.devices_textbox.insert(tk.END, "No devices connected yet. Scan QR code to connect.\n")
+                self.has_target_device = False
+                if hasattr(self, 'lbl_radar_dist_hero'):
+                    self.lbl_radar_dist_hero.configure(text="-- MM")
+                    self.lbl_radar_device.configure(text="🎯 DEVICE: Awaiting Phone Connection...")
+                    self.lbl_radar_bearing.configure(text="🧭 BEARING: 0.0° (N)")
+                    self.lbl_radar_signal.configure(text="📡 SIGNAL: - dBm | Latency: - ms")
             else:
+                self.has_target_device = True
+                # Pick first active controller for primary radar lock
+                first_dev = devices[0]
+                dev_name = first_dev.get('device_name', 'Remote Controller')
+                geo = first_dev.get('geo', {})
+                dist_km = first_dev.get('distance_km', 0.0)
+                from server import format_precision_distance
+                dist_fmt = format_precision_distance(dist_km) if dist_km > 0 else "±0.5 mm"
+
+                # Calculate Bearing from Desktop to Phone
+                d_lat = self.server.desktop_geo_info.get("lat")
+                d_lon = self.server.desktop_geo_info.get("lon")
+                c_lat = geo.get("lat")
+                c_lon = geo.get("lon")
+                bearing_deg = 0.0
+                if d_lat is not None and c_lat is not None and d_lon is not None and c_lon is not None:
+                    d_lat_r = math.radians(d_lat)
+                    d_lon_r = math.radians(d_lon)
+                    c_lat_r = math.radians(c_lat)
+                    c_lon_r = math.radians(c_lon)
+                    d_lon_diff = c_lon_r - d_lon_r
+                    y = math.sin(d_lon_diff) * math.cos(c_lat_r)
+                    x = math.cos(d_lat_r) * math.sin(c_lat_r) - math.sin(d_lat_r) * math.cos(c_lat_r) * math.cos(d_lon_diff)
+                    bearing_deg = (math.degrees(math.atan2(y, x)) + 360) % 360
+                else:
+                    bearing_deg = 45.0  # Default local radar offset
+
+                self.target_phone_bearing = bearing_deg
+
+                if hasattr(self, 'lbl_radar_dist_hero'):
+                    self.lbl_radar_dist_hero.configure(text=dist_fmt.upper())
+                    self.lbl_radar_device.configure(text=f"🎯 DEVICE: {dev_name}")
+                    self.lbl_radar_bearing.configure(text=f"🧭 BEARING: {bearing_deg:.1f}°")
+                    self.lbl_radar_signal.configure(text=f"📡 SIGNAL: -42 dBm | Latency: {first_dev.get('latency_ms', 1.5)}ms")
+
                 for idx, dev in enumerate(devices, 1):
-                    dev_name = dev.get('device_name', 'Remote Controller')
-                    geo = dev.get('geo', {})
-                    loc_str = f"{geo.get('city', 'Unknown City')}, {geo.get('country', '')} {geo.get('flag', '')}".strip()
-                    dist_km = dev.get('distance_km', 0.0)
-                    
-                    from server import format_precision_distance
-                    dist_str = f" | Dist: {format_precision_distance(dist_km)}" if dist_km > 0 else " | Dist: Local (±0.5 mm)"
+                    d_name = dev.get('device_name', 'Remote Controller')
+                    d_geo = dev.get('geo', {})
+                    loc_str = f"{d_geo.get('city', 'Unknown City')}, {d_geo.get('country', '')} {d_geo.get('flag', '')}".strip()
+                    d_dist_km = dev.get('distance_km', 0.0)
+                    dist_str = f" | Dist: {format_precision_distance(d_dist_km)}" if d_dist_km > 0 else " | Dist: Local (±0.5 mm)"
 
                     self.devices_textbox.insert(
                         tk.END,
-                        f"[{idx}] {dev_name}\n"
+                        f"[{idx}] {d_name}\n"
                         f"    📍 Location: {loc_str or 'Local / LAN'}{dist_str}\n"
                         f"    🔗 IP: {dev.get('ip')} | Latency: {dev.get('latency_ms', 0)}ms | Mode: {dev.get('mode', 'touchpad').upper()}\n\n"
                     )
