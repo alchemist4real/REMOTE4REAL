@@ -431,12 +431,27 @@ class Remote4RealApp {
       this.activateBluetoothProximityLink();
     }
 
+    // Stream real-time radar telemetry to PC Desktop Server (~12Hz)
+    if (this.ws && this.ws.readyState === WebSocket.OPEN && this.isAuthenticated) {
+      const now = Date.now();
+      if (now - (this.lastTelemetrySend || 0) > 80) {
+        this.lastTelemetrySend = now;
+        this.send({
+          t: 'radar_telemetry',
+          heading: parseFloat((this.deviceHeading || 0).toFixed(1)),
+          dist_m: parseFloat(this.smoothedDistanceMeters.toFixed(3)),
+          rssi: this.currentPingMs ? Math.round(-40 - (this.currentPingMs * 1.5)) : -45
+        });
+      }
+    }
+
     if (this.isRadarOpen) {
       this.updateRadarCompassUI();
     }
   }
 
   updateRadarCompassUI() {
+    const ring = document.querySelector('.compass-outer-ring');
     const pointer = document.getElementById('compass-target-pointer');
     const distHero = document.getElementById('radar-live-distance');
     const distSub = document.getElementById('radar-live-sub');
@@ -450,30 +465,48 @@ class Remote4RealApp {
       pointer.style.transform = `rotate(${relAngle.toFixed(1)}deg)`;
     }
 
+    // Target Locked Detection (Aligned within ±12°)
+    const isTargetLocked = (relAngle <= 12 || relAngle >= 348);
+    if (ring) {
+      if (isTargetLocked) {
+        if (!this.wasTargetLocked) {
+          this.wasTargetLocked = true;
+          this.vibrate([15]);
+        }
+        ring.classList.add('target-locked');
+      } else {
+        this.wasTargetLocked = false;
+        ring.classList.remove('target-locked');
+      }
+    }
+
     const dist = this.smoothedDistanceMeters;
     let distText = '';
     let subText = '';
     let rssiDb = -45;
     let rssiPct = 95;
 
+    const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    const cardinal = dirs[Math.round((this.deviceHeading || 0) / 22.5) % 16];
+
     if (dist >= 1000) {
       distText = `${(dist / 1000).toFixed(2)} KM`;
-      subText = `INTERNATIONAL TRANSIT LINK`;
+      subText = isTargetLocked ? `🎯 LOCKED ON PC • ${cardinal} (${this.deviceHeading.toFixed(0)}°)` : `TRANSIT LINK • ${cardinal} (${this.deviceHeading.toFixed(0)}°)`;
       rssiDb = -88;
       rssiPct = 40;
     } else if (dist >= 1.0) {
       distText = `${dist.toFixed(2)} M`;
-      subText = `PROXIMITY: ${(dist * 100).toFixed(0)} CM`;
+      subText = isTargetLocked ? `🎯 LOCKED ON PC (0° ALIGNED)` : `HEADING: ${this.deviceHeading.toFixed(0)}° (${cardinal})`;
       rssiDb = Math.round(-55 - (dist * 2.5));
       rssiPct = Math.max(50, Math.min(92, 100 - dist * 4));
     } else if (dist >= 0.01) {
       distText = `${(dist * 100).toFixed(1)} CM`;
-      subText = `SUB-METER RESOLUTION (${(dist * 1000).toFixed(0)} MM)`;
+      subText = isTargetLocked ? `🎯 DESK LOCKED (±${(dist * 10).toFixed(0)} MM)` : `PROXIMITY • ${cardinal} (${this.deviceHeading.toFixed(0)}°)`;
       rssiDb = -42;
       rssiPct = 96;
     } else {
       distText = `${(dist * 1000).toFixed(1)} MM`;
-      subText = `ULTRA-PRECISION TOUCH RANGE`;
+      subText = `🎯 TOUCH RANGE PROXIMITY`;
       rssiDb = -32;
       rssiPct = 99;
     }
@@ -485,7 +518,10 @@ class Remote4RealApp {
 
     if (tag) {
       tag.className = 'radar-proximity-badge';
-      if (dist < 1.0) {
+      if (isTargetLocked) {
+        tag.classList.add('in-range');
+        tag.textContent = '🎯 TARGET LOCKED ON PC (0° ALIGNED)';
+      } else if (dist < 1.0) {
         tag.classList.add('in-range');
         tag.textContent = '🟢 IN PROXIMITY RANGE (< 1M)';
       } else if (dist < 5.0) {

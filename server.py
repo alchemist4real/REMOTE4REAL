@@ -806,6 +806,23 @@ class ControllerServer:
             )
             return
 
+        # 1.5. RADAR & COMPASS TELEMETRY STREAM
+        elif msg_type == "radar_telemetry":
+            heading = float(data.get("heading", 0.0))
+            dist_m = float(data.get("dist_m", 0.0))
+            rssi = int(data.get("rssi", -45))
+            if websocket in self.client_metadata:
+                self.client_metadata[websocket]["heading"] = heading
+                self.client_metadata[websocket]["dist_m"] = dist_m
+                self.client_metadata[websocket]["rssi"] = rssi
+            self._notify("radar_telemetry_updated", {
+                "heading": heading,
+                "dist_m": dist_m,
+                "rssi": rssi,
+                "client": self.client_metadata.get(websocket, {})
+            })
+            return
+
         # 2. SCREEN STREAM TOGGLE
         elif msg_type == "screen_stream":
             enable = data.get("enable", True)

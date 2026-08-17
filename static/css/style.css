@@ -2051,6 +2051,23 @@ html, body {
   z-index: 5;
 }
 
+.compass-outer-ring.target-locked {
+  border-color: #34c759 !important;
+  box-shadow: 0 0 16px rgba(52, 199, 89, 0.4), inset 0 0 12px rgba(52, 199, 89, 0.15);
+  animation: pulse-locked 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-locked {
+  0% { box-shadow: 0 0 12px rgba(52, 199, 89, 0.3), inset 0 0 8px rgba(52, 199, 89, 0.1); }
+  50% { box-shadow: 0 0 22px rgba(52, 199, 89, 0.6), inset 0 0 16px rgba(52, 199, 89, 0.25); }
+  100% { box-shadow: 0 0 12px rgba(52, 199, 89, 0.3), inset 0 0 8px rgba(52, 199, 89, 0.1); }
+}
+
+.target-locked .arrow-head {
+  border-bottom-color: #34c759 !important;
+  filter: drop-shadow(0 2px 8px rgba(52, 199, 89, 0.6));
+}
+
 .arrow-head {
   position: absolute;
   top: 24px;

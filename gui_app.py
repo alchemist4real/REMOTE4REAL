@@ -1467,6 +1467,38 @@ class Remote4RealDesktopGUI:
                     )
             self.devices_textbox.configure(state="disabled")
 
+        elif event == "radar_telemetry_updated":
+            heading = float(data.get("heading", 0.0))
+            dist_m = float(data.get("dist_m", 0.0))
+            rssi = int(data.get("rssi", -45))
+            client = data.get("client", {})
+            dev_name = client.get("device_name", "Remote Controller")
+            latency = client.get("latency_ms", 1.5)
+
+            self.has_target_device = True
+            self.target_phone_bearing = heading
+
+            # Format real-time distance string
+            if dist_m >= 1000:
+                dist_str = f"{dist_m / 1000.0:.2f} KM"
+            elif dist_m >= 1.0:
+                dist_str = f"{dist_m:.2f} M"
+            elif dist_m >= 0.01:
+                dist_str = f"{dist_m * 100.0:.1f} CM"
+            else:
+                dist_str = f"±{max(0.5, dist_m * 1000.0):.1f} MM"
+
+            dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+            cardinal = dirs[round(heading / 22.5) % 16]
+
+            if hasattr(self, 'lbl_radar_dist_hero'):
+                self.lbl_radar_dist_hero.configure(text=dist_str)
+                self.lbl_radar_device.configure(text=f"🎯 DEVICE: {dev_name}")
+                self.lbl_radar_bearing.configure(text=f"🧭 BEARING: {heading:.1f}° ({cardinal})")
+                self.lbl_radar_signal.configure(text=f"📡 SIGNAL: {rssi} dBm | Latency: {latency:.1f}ms")
+
+            self._draw_radar_compass()
+
         elif event == "find_desktop_alarm":
             client_ip = data.get("client_ip", "Phone")
             self.lbl_last_action.configure(text=f"🔔 RINGING PC SPEAKERS — PHONE ({client_ip}) IS CALLING!")
