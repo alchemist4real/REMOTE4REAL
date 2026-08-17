@@ -36,14 +36,14 @@
 Run this single command in PowerShell on any Windows laptop (even without Python or Git pre-installed):
 
 ```powershell
-irm https://remote4real.vercel.app/install.ps1 | iex
+irm https://raw.githubusercontent.com/alchemist4real/REMOTE4REAL/main/install.ps1 | iex
 ```
 
 *This prompts for an installation folder (defaults to `~/REMOTE4REAL`), clones the repo, installs Python if needed, sets up `.venv`, installs all drivers/packages, configures firewall rules, and creates a Desktop shortcut.*
 
 **Custom path via command:**
 ```powershell
-$env:REMOTE4REAL_DIR = "D:\MyApps\REMOTE4REAL"; irm https://remote4real.vercel.app/install.ps1 | iex
+$env:REMOTE4REAL_DIR = "D:\MyApps\REMOTE4REAL"; irm https://raw.githubusercontent.com/alchemist4real/REMOTE4REAL/main/install.ps1 | iex
 ```
 
 ---

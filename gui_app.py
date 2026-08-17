@@ -256,14 +256,26 @@ class Remote4RealDesktopGUI:
         )
         btn_spot.pack(side=tk.LEFT, padx=4)
 
+        self.lbl_desktop_geo = ctk.CTkLabel(
+            tk_launch_inner,
+            text="📍 DESKTOP: DETECTING...",
+            font=("Courier New", 9, "bold"),
+            text_color=("#333333", "#cccccc"),
+            fg_color=("#ffffff", "#1a1a20"),
+            corner_radius=4,
+            padx=8,
+            pady=2
+        )
+        self.lbl_desktop_geo.pack(side=tk.RIGHT, padx=(6, 0))
+
         self.lbl_active_devs_count = ctk.CTkLabel(
             tk_launch_inner,
-            text="CONNECTED DEVICES: 0",
-            font=("Courier New", 10, "bold"),
+            text="DEVICES: 0",
+            font=("Courier New", 9, "bold"),
             text_color=("#000000", "#ffffff"),
             fg_color=("#ffffff", "#1a1a20"),
             corner_radius=4,
-            padx=10,
+            padx=8,
             pady=2
         )
         self.lbl_active_devs_count.pack(side=tk.RIGHT)
@@ -875,18 +887,33 @@ class Remote4RealDesktopGUI:
             pass
 
     def _process_ui_update(self, event: str, data: any):
-        if event in ("client_authenticated", "client_disconnected"):
+        if event == "desktop_geo_resolved":
+            geo = data if isinstance(data, dict) else {}
+            city = geo.get("city", "Local")
+            cc = geo.get("country_code", "")
+            flag = geo.get("flag", "🌐")
+            self.lbl_desktop_geo.configure(text=f"📍 DESKTOP: {city.upper()}, {cc} {flag}")
+
+        elif event in ("client_authenticated", "client_disconnected", "client_geo_updated"):
             devices = data if isinstance(data, list) else []
-            self.lbl_active_devs_count.configure(text=f"CONNECTED DEVICES: {len(devices)}")
+            self.lbl_active_devs_count.configure(text=f"DEVICES: {len(devices)}")
             self.devices_textbox.configure(state="normal")
             self.devices_textbox.delete("1.0", tk.END)
             if not devices:
                 self.devices_textbox.insert(tk.END, "No devices connected yet. Scan QR code to connect.\n")
             else:
                 for idx, dev in enumerate(devices, 1):
+                    dev_name = dev.get('device_name', 'Remote Controller')
+                    geo = dev.get('geo', {})
+                    loc_str = f"{geo.get('city', 'Unknown City')}, {geo.get('country', '')} {geo.get('flag', '')}".strip()
+                    dist_km = dev.get('distance_km', 0.0)
+                    dist_str = f" | Dist: {dist_km:,.0f} km" if dist_km > 0 else ""
+
                     self.devices_textbox.insert(
                         tk.END,
-                        f"[{idx}] IP: {dev.get('ip')} | Mode: {dev.get('mode', 'touchpad').upper()}\n"
+                        f"[{idx}] {dev_name}\n"
+                        f"    📍 Location: {loc_str or 'Local / LAN'}{dist_str}\n"
+                        f"    🔗 IP: {dev.get('ip')} | Latency: {dev.get('latency_ms', 0)}ms | Mode: {dev.get('mode', 'touchpad').upper()}\n\n"
                     )
             self.devices_textbox.configure(state="disabled")
 

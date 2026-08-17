@@ -1586,6 +1586,82 @@ html, body {
   touch-action: manipulation;
 }
 
+/* Worldwide Dual-Location Card */
+.geo-status-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-dark);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.geo-header-title {
+  font-family: var(--font-primary);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ink-tertiary);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.geo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: var(--font-primary);
+}
+
+.geo-device-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  flex-shrink: 0;
+}
+
+.geo-loc-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  text-align: right;
+  word-break: break-word;
+}
+
+.geo-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3px 0;
+  position: relative;
+}
+
+.geo-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-medium);
+  z-index: 1;
+}
+
+.geo-dist-badge {
+  position: relative;
+  z-index: 2;
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+  font-family: var(--font-primary);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+}
+
 .setting-group { margin-bottom: 8px; }
 .setting-group label {
   display: block;

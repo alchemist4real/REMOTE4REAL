@@ -11,7 +11,7 @@ node_modules/
 .venv/
 venv/
 
-# Ignore Python dependencies and backend files so Vercel treats the project as a pure static web app
+# Ignore Python backend files so Vercel treats the project as a static web app
 requirements.txt
 *.py
 *.iss
@@ -20,6 +20,4 @@ requirements.txt
 !web/**
 !vercel.json
 *.bat
-install.ps1
-setup_environment.ps1
 static/

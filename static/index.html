@@ -690,7 +690,7 @@
               <div class="section-badge">WINDOWS PC (HOST)</div>
               <p class="download-desc">One-command automatic installer. Installs Python, dependencies, gamepad drivers, and starts Companion:</p>
               <div class="code-box">
-                <code>irm https://remote4real.vercel.app/install.ps1 | iex</code>
+                <code>irm https://raw.githubusercontent.com/alchemist4real/REMOTE4REAL/main/install.ps1 | iex</code>
               </div>
               <button id="btn-copy-install-cmd" class="modal-full-btn highlight">COPY POWERSHELL COMMAND</button>
               
@@ -724,7 +724,23 @@
             <button id="btn-close-settings" class="btn-icon">✕</button>
           </div>
           <div class="modal-body">
-            <div class="setting-group">
+            <!-- Worldwide Dual-Location Status Card -->
+            <div class="geo-status-card" id="geo-status-card">
+              <div class="geo-header-title">🌍 WORLDWIDE CONNECTION MAPPING</div>
+              <div class="geo-row">
+                <span class="geo-device-tag">📱 PHONE (YOU):</span>
+                <span id="geo-client-location" class="geo-loc-text">DETECTING...</span>
+              </div>
+              <div class="geo-divider">
+                <span id="geo-distance-text" class="geo-dist-badge">CALCULATING DISTANCE...</span>
+              </div>
+              <div class="geo-row">
+                <span class="geo-device-tag">💻 DESKTOP PC:</span>
+                <span id="geo-desktop-location" class="geo-loc-text">CONNECTING...</span>
+              </div>
+            </div>
+
+            <div class="setting-group" style="margin-top: 10px;">
               <label>TOUCHPAD SENSITIVITY</label>
               <input type="range" id="setting-sensitivity" min="0.5" max="3.0" step="0.1" value="1.2">
               <span id="val-sensitivity" class="setting-val">1.2X</span>

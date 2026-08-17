@@ -30,15 +30,99 @@ class Remote4RealApp {
     this.qrStream = null;
     this.isScanning = false;
 
+    // Worldwide Dual-Location State
+    this.clientGeo = { city: 'Detecting...', country: '', countryCode: '', flag: '🌐', lat: null, lon: null };
+    this.desktopGeo = null;
+    this.deviceName = this.detectDeviceName();
+
     this.initSecurityUI();
     this.initScannerUI();
     this.initModeDropdown();
     this.initFullscreenUI();
     this.initDownloadModal();
+    this.detectClientGeolocation();
     this.initNetwork();
     this.initUI();
     this.initRotation();
     this.initSwipeGestures();
+  }
+
+  detectDeviceName() {
+    const ua = navigator.userAgent;
+    if (/iPhone/i.test(ua)) return 'iPhone (iOS)';
+    if (/iPad/i.test(ua)) return 'iPad (iPadOS)';
+    if (/Android/i.test(ua)) return 'Android Device';
+    if (/Macintosh/i.test(ua)) return 'Mac';
+    if (/Windows/i.test(ua)) return 'Windows PC';
+    return 'Mobile Browser';
+  }
+
+  async detectClientGeolocation() {
+    try {
+      // 1. Fetch IP Geolocation (Fast & zero-auth)
+      const res = await fetch('http://ip-api.com/json/?fields=status,country,countryCode,regionName,city,lat,lon,timezone', { cache: 'no-cache' }).catch(() => null);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data.status === 'success') {
+          const cc = data.countryCode || '';
+          const flag = cc.length === 2 ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '🌐';
+          this.clientGeo = {
+            city: data.city || 'Unknown City',
+            region: data.regionName || '',
+            country: data.country || '',
+            countryCode: cc,
+            flag: flag,
+            lat: data.lat,
+            lon: data.lon,
+            timezone: data.timezone || ''
+          };
+          this.updateGeoUI();
+          return;
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    // 2. Timezone-based fallback if offline / direct LAN
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const city = tz.includes('/') ? tz.split('/')[1].replace(/_/g, ' ') : 'Local Device';
+    this.clientGeo = {
+      city: city,
+      country: 'Local Network',
+      countryCode: '',
+      flag: '📍',
+      lat: null,
+      lon: null,
+      timezone: tz
+    };
+    this.updateGeoUI();
+  }
+
+  updateGeoUI(distanceKm = null) {
+    const clientLocEl = document.getElementById('geo-client-location');
+    const desktopLocEl = document.getElementById('geo-desktop-location');
+    const distEl = document.getElementById('geo-distance-text');
+
+    if (clientLocEl) {
+      const cStr = `${this.clientGeo.city}${this.clientGeo.country ? ', ' + this.clientGeo.country : ''} ${this.clientGeo.flag}`;
+      clientLocEl.textContent = cStr.trim();
+    }
+
+    if (desktopLocEl && this.desktopGeo) {
+      const dStr = `${this.desktopGeo.city}${this.desktopGeo.country ? ', ' + this.desktopGeo.country : ''} ${this.desktopGeo.flag || ''}`;
+      desktopLocEl.textContent = dStr.trim();
+    }
+
+    if (distEl) {
+      if (distanceKm !== null && distanceKm > 0) {
+        distEl.textContent = `⚡ ${Math.round(distanceKm).toLocaleString()} KM DISTANCE`;
+      } else if (this.isConnected) {
+        distEl.textContent = `⚡ DIRECT LOW-LATENCY LINK`;
+      } else {
+        distEl.textContent = `CALCULATING DISTANCE...`;
+      }
+    }
   }
 
   // ==========================================
@@ -401,9 +485,8 @@ class Remote4RealApp {
     }
 
     if (copyCmdBtn) {
-      copyCmdBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const cmd = 'irm https://remote4real.vercel.app/install.ps1 | iex';
+      copyCmdBtn.addEventListener('click', () => {
+        const cmd = 'irm https://raw.githubusercontent.com/alchemist4real/REMOTE4REAL/main/install.ps1 | iex';
         navigator.clipboard.writeText(cmd).then(() => {
           this.vibrate([20, 50, 20]);
           copyCmdBtn.textContent = 'COPIED TO CLIPBOARD!';
@@ -478,16 +561,35 @@ class Remote4RealApp {
             this.updateStatus('ONLINE', 'connected');
             this.vibrate([20, 50, 20]);
             this.sendMode(this.activeMode);
+
+            if (data.desktop_geo) {
+              this.desktopGeo = data.desktop_geo;
+              this.updateGeoUI();
+            }
+
+            // Send Phone Geolocation to Desktop
+            this.send({
+              t: 'client_geo',
+              geo: this.clientGeo,
+              device_name: this.deviceName
+            });
           }
 
-          // 3. AUTH FAILED
+          // 3. GEO SYNC PACKET
+          else if (data.type === 'geo_sync') {
+            if (data.desktop) this.desktopGeo = data.desktop;
+            if (data.client) this.clientGeo = data.client;
+            this.updateGeoUI(data.distance_km);
+          }
+
+          // 4. AUTH FAILED
           else if (data.type === 'auth_failed') {
             this.isAuthenticated = false;
             const err = data.error || 'INVALID PIN';
             this.showPinModal(err);
           }
 
-          // 4. PONG LATENCY
+          // 5. PONG LATENCY
           else if (data.type === 'pong') {
             const now = Date.now();
             this.currentPingMs = Math.round(now - data.ts);

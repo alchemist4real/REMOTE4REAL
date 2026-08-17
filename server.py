@@ -22,6 +22,26 @@ from controller_engine import WindowsInputController
 from screen_capture import ScreenCapturer
 from version import __version__, __app_name__, __author__, __github_url__
 import updater
+import urllib.request
+import math
+
+def country_code_to_flag(code: str) -> str:
+    if not code or len(code) != 2:
+        return "🌐"
+    return "".join(chr(127397 + ord(c.upper())) for c in code)
+
+def calculate_distance_km(lat1, lon1, lat2, lon2) -> float:
+    try:
+        if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
+            return 0.0
+        R = 6371.0  # Earth radius in km
+        dlat = math.radians(float(lat2) - float(lat1))
+        dlon = math.radians(float(lon2) - float(lon1))
+        a = math.sin(dlat / 2)**2 + math.cos(math.radians(float(lat1))) * math.cos(math.radians(float(lat2))) * math.sin(dlon / 2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return round(R * c, 1)
+    except Exception:
+        return 0.0
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -37,6 +57,20 @@ class ControllerServer:
         self.ws_port = ws_port
         self.input_engine = WindowsInputController()
         self.screen_capturer = ScreenCapturer(target_width=1280, quality=65)
+
+        # Worldwide Geolocation Info
+        self.desktop_geo_info = {
+            "city": "Detecting...",
+            "region": "",
+            "country": "Detecting...",
+            "country_code": "",
+            "flag": "🌐",
+            "lat": None,
+            "lon": None,
+            "isp": "",
+            "timezone": ""
+        }
+        threading.Thread(target=self._resolve_desktop_geo, daemon=True).start()
 
         # Security & Authentication
         self.security_pin: str = f"{random.randint(1000, 9999)}"
@@ -55,6 +89,34 @@ class ControllerServer:
         self.ws_server = None
         self.loop = None
         self.active_mode = "touchpad"
+
+    def _resolve_desktop_geo(self):
+        """Asynchronously resolve Desktop's public geographic location."""
+        try:
+            req = urllib.request.Request(
+                "http://ip-api.com/json/?fields=status,country,countryCode,regionName,city,lat,lon,timezone,isp,query",
+                headers={"User-Agent": "REMOTE4REAL-Companion/2.0"}
+            )
+            with urllib.request.urlopen(req, timeout=3.5) as response:
+                data = json.loads(response.read().decode())
+                if data.get("status") == "success":
+                    cc = data.get("countryCode", "")
+                    self.desktop_geo_info = {
+                        "city": data.get("city", "Unknown City"),
+                        "region": data.get("regionName", ""),
+                        "country": data.get("country", "Unknown Country"),
+                        "country_code": cc,
+                        "flag": country_code_to_flag(cc),
+                        "lat": data.get("lat"),
+                        "lon": data.get("lon"),
+                        "isp": data.get("isp", ""),
+                        "timezone": data.get("timezone", ""),
+                        "ip": data.get("query", "")
+                    }
+                    logging.info(f"Desktop Geolocation resolved: {self.desktop_geo_info['city']}, {self.desktop_geo_info['country']} {self.desktop_geo_info['flag']}")
+                    self._notify("desktop_geo_resolved", self.desktop_geo_info)
+        except Exception as e:
+            logging.debug(f"Could not resolve desktop geo (offline/private LAN): {e}")
 
     def add_status_callback(self, callback: Callable[[str, Any], None]):
         self.status_callbacks.append(callback)
@@ -320,7 +382,8 @@ class ControllerServer:
 
                                 await websocket.send(json.dumps({
                                     "type": "auth_success",
-                                    "vgamepad": self.input_engine.gamepad_mode == "xinput"
+                                    "vgamepad": self.input_engine.gamepad_mode == "xinput",
+                                    "desktop_geo": self.desktop_geo_info
                                 }))
                                 logging.info(f"Device authenticated: {client_address}")
                                 self._notify("client_authenticated", self.get_device_list_info())
@@ -373,7 +436,10 @@ class ControllerServer:
                     "ip": meta.get("ip"),
                     "connected_at": meta.get("connected_at"),
                     "latency_ms": meta.get("latency_ms", 0),
-                    "mode": meta.get("mode", "touchpad")
+                    "mode": meta.get("mode", "touchpad"),
+                    "device_name": meta.get("device_name", "Remote Phone"),
+                    "geo": meta.get("geo", {}),
+                    "distance_km": meta.get("distance_km", 0.0)
                 })
         return devices
 
@@ -492,6 +558,34 @@ class ControllerServer:
             if websocket in self.client_metadata:
                 self.client_metadata[websocket]["mode"] = mode
             self._notify("mode_changed", {"mode": mode})
+
+        # 10. CLIENT GEOLOCATION SYNC
+        elif msg_type == "client_geo":
+            geo = data.get("geo", {})
+            dev_name = data.get("device_name", "Remote Phone")
+            if websocket in self.client_metadata:
+                self.client_metadata[websocket]["geo"] = geo
+                self.client_metadata[websocket]["device_name"] = dev_name
+
+                # Calculate distance between Desktop and Phone
+                d_lat = self.desktop_geo_info.get("lat")
+                d_lon = self.desktop_geo_info.get("lon")
+                c_lat = geo.get("lat")
+                c_lon = geo.get("lon")
+                dist_km = calculate_distance_km(d_lat, d_lon, c_lat, c_lon)
+                self.client_metadata[websocket]["distance_km"] = dist_km
+
+                # Reply with geo_sync
+                asyncio.run_coroutine_threadsafe(
+                    websocket.send(json.dumps({
+                        "type": "geo_sync",
+                        "desktop": self.desktop_geo_info,
+                        "client": geo,
+                        "distance_km": dist_km
+                    })),
+                    self.loop
+                )
+                self._notify("client_geo_updated", self.get_device_list_info())
 
     # ==========================================
     # LIFECYCLE MANAGEMENT
