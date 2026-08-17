@@ -23,6 +23,9 @@ from screen_capture import ScreenCapturer
 from version import __version__, __app_name__, __author__, __github_url__
 import updater
 import urllib.request
+import subprocess
+import re
+import concurrent.futures
 import math
 
 def country_code_to_flag(code: str) -> str:
@@ -195,6 +198,8 @@ class ControllerServer:
         self.ws_server = None
         self.loop = None
         self.active_mode = "touchpad"
+        self.international_link: str = ""
+        self.cloud_tunnel_host: str = ""
 
     def scan_local_wifi_devices(self) -> list[dict]:
         """High-speed multi-threaded probe and ARP scan of the local Wi-Fi subnet."""
@@ -943,6 +948,9 @@ class ControllerServer:
 
         ws_thread = threading.Thread(target=_ws_thread_entry, daemon=True)
         ws_thread.start()
+
+        # Start Automatic International Cloud Tunnel & WAN Discovery
+        threading.Thread(target=self._auto_setup_international_signal, daemon=True).start()
 
         print("\n" + "="*60)
         print("[*] REMOTE4REAL CONTROLLER SERVER ONLINE")

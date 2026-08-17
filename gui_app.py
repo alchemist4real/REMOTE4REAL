@@ -418,6 +418,53 @@ class Remote4RealDesktopGUI:
         )
         qr_card.pack(fill=tk.BOTH, expand=True, pady=(2, 0))
 
+        # Instant QR Mode Switcher Bar
+        qr_mode_row = ctk.CTkFrame(qr_card, fg_color="transparent")
+        qr_mode_row.pack(fill=tk.X, padx=14, pady=(8, 4))
+
+        btn_switch_wifi = ctk.CTkButton(
+            qr_mode_row,
+            text="📶 LOCAL WI-FI",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#000000", "#ffffff"),
+            text_color=("#ffffff", "#000000"),
+            hover_color=("#222222", "#dcdcdc"),
+            corner_radius=4,
+            height=26,
+            command=lambda: self.switch_conn_mode("wifi")
+        )
+        btn_switch_wifi.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 3))
+
+        self.btn_switch_cloud_qr = ctk.CTkButton(
+            qr_mode_row,
+            text="🌐 WORLDWIDE (PROVISIONING...)",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#ffffff", "#1a1a20"),
+            text_color=("#000000", "#ffffff"),
+            border_width=1,
+            border_color=("#d0d0d4", "#303038"),
+            hover_color=("#f0f0f4", "#262630"),
+            corner_radius=4,
+            height=26,
+            command=lambda: self.switch_conn_mode("vpn")
+        )
+        self.btn_switch_cloud_qr.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=3)
+
+        btn_switch_bt = ctk.CTkButton(
+            qr_mode_row,
+            text="⚡ BLUETOOTH",
+            font=("Courier New", 9, "bold"),
+            fg_color=("#ffffff", "#1a1a20"),
+            text_color=("#000000", "#ffffff"),
+            border_width=1,
+            border_color=("#d0d0d4", "#303038"),
+            hover_color=("#f0f0f4", "#262630"),
+            corner_radius=4,
+            height=26,
+            command=lambda: self.switch_conn_mode("bluetooth")
+        )
+        btn_switch_bt.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(3, 0))
+
         # QR Container Frame (Fixed pure white background for QR scannability)
         qr_border_box = ctk.CTkFrame(
             qr_card,
@@ -425,14 +472,26 @@ class Remote4RealDesktopGUI:
             corner_radius=6,
             border_width=1,
             border_color="#d0d0d4",
-            width=180,
-            height=180
+            width=175,
+            height=175
         )
-        qr_border_box.pack(pady=(8, 6))
+        qr_border_box.pack(pady=(4, 6))
         qr_border_box.pack_propagate(False)
 
         self.qr_label = ctk.CTkLabel(qr_border_box, text="", fg_color="#ffffff")
         self.qr_label.pack(expand=True)
+
+        # Cloud Status Pill
+        self.lbl_cloud_status = ctk.CTkLabel(
+            qr_card,
+            text="🌐 AUTO-CLOUD LINK: STARTING ZERO-CONFIG TUNNEL...",
+            font=("Courier New", 8, "bold"),
+            text_color=("#666666", "#888888"),
+            fg_color=("#ffffff", "#101014"),
+            corner_radius=4,
+            height=20
+        )
+        self.lbl_cloud_status.pack(fill=tk.X, padx=14, pady=(0, 4))
 
         # URL Box & Copy Button
         url_box = ctk.CTkFrame(qr_card, fg_color="transparent")
@@ -516,16 +575,14 @@ class Remote4RealDesktopGUI:
                         self.selected_ip = item["ip"]
                         break
         elif mode == "vpn":
-            found_vpn = False
-            for idx, item in enumerate(self.ip_choices):
-                if item.get("is_vpn"):
-                    if idx < len(self.combo_options):
-                        self.combo_ip.set(self.combo_options[idx])
-                    self.selected_ip = item["ip"]
-                    found_vpn = True
-                    break
-            if not found_vpn and self.server.international_link:
-                self.selected_ip = "cloud"
+            self.selected_ip = "cloud"
+            if hasattr(self, 'seg_mode'):
+                self.seg_mode.set("WORLDWIDE / VPN")
+            if hasattr(self, 'btn_switch_cloud_qr'):
+                self.btn_switch_cloud_qr.configure(
+                    fg_color=("#000000", "#ffffff"),
+                    text_color=("#ffffff", "#000000")
+                )
 
         self.update_qr_code()
 
@@ -1317,8 +1374,21 @@ class Remote4RealDesktopGUI:
 
         elif event == "international_link_ready":
             url = data.get("url", "")
+            host = data.get("host", "Cloudflare")
             if url:
                 self.lbl_last_action.configure(text=f"🌐 WORLDWIDE CLOUD LINK READY: {url[:50]}...")
+                if hasattr(self, 'lbl_cloud_status'):
+                    self.lbl_cloud_status.configure(
+                        text=f"🟢 WORLDWIDE AUTO-CLOUD: READY ({host})",
+                        fg_color=("#34c759", "#28a745"),
+                        text_color="#ffffff"
+                    )
+                if hasattr(self, 'btn_switch_cloud_qr'):
+                    self.btn_switch_cloud_qr.configure(
+                        text="🌐 WORLDWIDE (READY ✅)",
+                        fg_color=("#000000", "#ffffff"),
+                        text_color=("#ffffff", "#000000")
+                    )
                 if self.connection_mode == "vpn":
                     self.selected_ip = "cloud"
                     self.update_qr_code()
