@@ -31,14 +31,24 @@ installers/
 
 ## 1. 🖥️ Desktop App (Windows)
 
-### Quick Run:
+### 🌟 One-Command Remote Setup (Clean Windows Laptop):
+Run in Windows PowerShell (Administrator or standard):
+```powershell
+irm https://raw.githubusercontent.com/alchemist4real/REMOTE4REAL/main/install.ps1 | iex
+```
+*Auto-provisions Git, Python runtime, virtual environment, dependencies, firewall rules, and desktop shortcuts.*
+
+### ⚡ 1-Click Local Run:
+- Double-click `run.bat` or run `powershell -ExecutionPolicy Bypass -File setup_environment.ps1`.
+
+### Standalone Binary:
 - Navigate to `installers/Desktop/REMOTE4REAL-Windows/` and launch `REMOTE4REAL.exe`.
 
 ### 1-Click Shortcut Installation:
 - Double-click `installers/Desktop/install_desktop_shortcut.bat`. This automatically places desktop and start menu shortcuts with custom icons on your Windows system.
 
 ### Create Windows Setup Wizard:
-- If you have [Inno Setup](https://jrsoftware.org/isinfo.php) installed, open `installers/Desktop/REMOTE4REAL_Setup.iss` and click **Compile** to produce a single `REMOTE4REAL_Windows_Setup_v1.0.0.exe` installer.
+- If you have [Inno Setup](https://jrsoftware.org/isinfo.php) installed, open `installers/Desktop/REMOTE4REAL_Setup.iss` and click **Compile** to produce a single `REMOTE4REAL_Windows_Setup_v1.1.0.exe` installer.
 
 ---
 

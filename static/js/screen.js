@@ -1,15 +1,17 @@
 /**
  * REMOTE4REAL — Screen Mirror & Direct Touch Engine
+ * Engineered by alchemist4real
  */
 
 class TouchscreenController {
   constructor() {
     this.container = document.getElementById('screen-mirror-container');
     this.streamImg = document.getElementById('screen-stream-img');
-    this.loadingOverlay = document.getElementById('screen-loading-overlay');
+    this.loadingOverlay = document.getElementById('screen-loading-spinner') || document.getElementById('screen-loading-overlay');
     this.btnFit = document.getElementById('btn-screen-fit');
-    this.btnKeyboard = document.getElementById('btn-screen-keyboard');
-    this.miniKeyboard = document.getElementById('screen-mini-keyboard');
+    this.btnFill = document.getElementById('btn-screen-fill');
+    this.btnReconnect = document.getElementById('btn-screen-reconnect');
+    this.fpsBadge = document.getElementById('screen-fps-counter') || document.getElementById('screen-fps-text');
 
     this.isFit = true;
     this.isRightClickMode = false;
@@ -25,23 +27,21 @@ class TouchscreenController {
     // FPS Counter
     this.frameCount = 0;
     this.lastFpsTime = performance.now();
-    this.fpsText = document.getElementById('screen-fps-text');
 
     this.initTouchEvents();
     this.initControls();
+    this.initAutoRotateListener();
   }
 
   onModeActivated() {
-    console.log('Screen Mirror mode activated - requesting WebSocket stream...');
     if (this.loadingOverlay) this.loadingOverlay.classList.remove('hidden');
-    if (window.app) {
+    if (window.app && window.app.send) {
       window.app.send({ t: 'screen_stream', enable: true });
     }
   }
 
   onModeDeactivated() {
-    console.log('Screen Mirror mode deactivated - pausing stream...');
-    if (window.app) {
+    if (window.app && window.app.send) {
       window.app.send({ t: 'screen_stream', enable: false });
     }
   }
@@ -72,7 +72,7 @@ class TouchscreenController {
       tempImg.src = newUrl;
 
     } catch (e) {
-      console.error('Error rendering binary screen frame:', e);
+      console.error('Error rendering screen frame:', e);
     }
   }
 
@@ -82,8 +82,8 @@ class TouchscreenController {
     const elapsed = now - this.lastFpsTime;
     if (elapsed >= 1000) {
       const fps = Math.round((this.frameCount * 1000) / elapsed);
-      if (this.fpsText) {
-        this.fpsText.textContent = `${fps} FPS`;
+      if (this.fpsBadge) {
+        this.fpsBadge.textContent = `${fps} FPS`;
       }
       this.frameCount = 0;
       this.lastFpsTime = now;
@@ -162,41 +162,47 @@ class TouchscreenController {
         this.touchStartPos = { x: t.clientX, y: t.clientY };
         this.hasMoved = false;
 
-        // Long press detection for Right Click (320ms)
+        // Long press detection for Right Click (300ms)
         clearTimeout(this.longPressTimer);
         this.longPressTimer = setTimeout(() => {
           if (!this.hasMoved) {
-            window.app.vibrate([20, 50, 20]);
-            window.app.send({
-              t: 'screen_touch',
-              x: coords.x,
-              y: coords.y,
-              act: 'right_click'
-            });
+            if (window.app && window.app.vibrate) window.app.vibrate([20, 50, 20]);
+            if (window.app && window.app.send) {
+              window.app.send({
+                t: 'screen_touch',
+                x: coords.x,
+                y: coords.y,
+                act: 'right_click'
+              });
+            }
             this.spawnTouchIndicator(t.clientX, t.clientY, 'right-click');
           }
-        }, 320);
+        }, 300);
 
         const btn = this.isRightClickMode ? 'right' : 'left';
-        window.app.send({
-          t: 'screen_touch',
-          x: coords.x,
-          y: coords.y,
-          act: 'down',
-          btn: btn
-        });
+        if (window.app && window.app.send) {
+          window.app.send({
+            t: 'screen_touch',
+            x: coords.x,
+            y: coords.y,
+            act: 'down',
+            btn: btn
+          });
+        }
 
       } else if (numTouches === 2) {
         clearTimeout(this.longPressTimer);
         const t = e.touches[0];
         const coords = getNormalizedCoords(t);
-        window.app.vibrate(15);
-        window.app.send({
-          t: 'screen_touch',
-          x: coords.x,
-          y: coords.y,
-          act: 'right_click'
-        });
+        if (window.app && window.app.vibrate) window.app.vibrate(15);
+        if (window.app && window.app.send) {
+          window.app.send({
+            t: 'screen_touch',
+            x: coords.x,
+            y: coords.y,
+            act: 'right_click'
+          });
+        }
         this.spawnTouchIndicator(t.clientX, t.clientY, 'right-click');
       }
     }, { passive: false });
@@ -215,12 +221,14 @@ class TouchscreenController {
         }
 
         const coords = getNormalizedCoords(t);
-        window.app.send({
-          t: 'screen_touch',
-          x: coords.x,
-          y: coords.y,
-          act: 'move'
-        });
+        if (window.app && window.app.send) {
+          window.app.send({
+            t: 'screen_touch',
+            x: coords.x,
+            y: coords.y,
+            act: 'move'
+          });
+        }
       }
     }, { passive: false });
 
@@ -235,23 +243,23 @@ class TouchscreenController {
         const duration = Date.now() - this.touchStartTime;
 
         const btn = this.isRightClickMode ? 'right' : 'left';
-        window.app.send({
-          t: 'screen_touch',
-          x: coords.x,
-          y: coords.y,
-          act: 'up',
-          btn: btn
-        });
+        if (window.app && window.app.send) {
+          window.app.send({
+            t: 'screen_touch',
+            x: coords.x,
+            y: coords.y,
+            act: 'up',
+            btn: btn
+          });
+        }
 
-        if (!this.hasMoved && duration < 300 && !this.isRightClickMode) {
-          window.app.vibrate(10);
+        if (!this.hasMoved && duration < 280 && !this.isRightClickMode) {
+          if (window.app && window.app.vibrate) window.app.vibrate(10);
           this.spawnTouchIndicator(t.clientX, t.clientY, 'left-click');
         }
 
         if (this.isRightClickMode) {
           this.isRightClickMode = false;
-          const rBtn = document.getElementById('btn-screen-rc');
-          if (rBtn) rBtn.classList.remove('active');
         }
       }
     }, { passive: false });
@@ -268,39 +276,57 @@ class TouchscreenController {
 
   initControls() {
     if (this.btnFit && this.streamImg) {
-      this.btnFit.addEventListener('click', () => {
-        this.isFit = !this.isFit;
-        this.streamImg.classList.toggle('screen-fill-mode', !this.isFit);
-        this.btnFit.textContent = this.isFit ? '🔍 FIT' : '🔍 FILL';
-        window.app.vibrate(12);
+      this.btnFit.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.isFit = true;
+        this.streamImg.classList.remove('screen-fill-mode');
+        this.btnFit.classList.add('active');
+        if (this.btnFill) this.btnFill.classList.remove('active');
+        if (window.app && window.app.vibrate) window.app.vibrate(12);
       });
     }
 
-    if (this.btnKeyboard && this.miniKeyboard) {
-      this.btnKeyboard.addEventListener('click', () => {
-        this.miniKeyboard.classList.toggle('hidden');
-        window.app.vibrate(15);
+    if (this.btnFill && this.streamImg) {
+      this.btnFill.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.isFit = false;
+        this.streamImg.classList.add('screen-fill-mode');
+        this.btnFill.classList.add('active');
+        if (this.btnFit) this.btnFit.classList.remove('active');
+        if (window.app && window.app.vibrate) window.app.vibrate(12);
       });
     }
 
-    const rBtn = document.getElementById('btn-screen-rc');
-    if (rBtn) {
-      rBtn.addEventListener('click', () => {
-        this.isRightClickMode = !this.isRightClickMode;
-        rBtn.classList.toggle('active', this.isRightClickMode);
-        window.app.vibrate(15);
-      });
-    }
-
-    const refreshBtn = document.getElementById('btn-screen-refresh');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
+    if (this.btnReconnect) {
+      this.btnReconnect.addEventListener('click', (e) => {
+        e.preventDefault();
         if (this.loadingOverlay) this.loadingOverlay.classList.remove('hidden');
-        if (window.app) {
+        if (window.app && window.app.send) {
           window.app.send({ t: 'screen_stream', enable: true });
         }
-        window.app.vibrate(15);
+        if (window.app && window.app.vibrate) window.app.vibrate(15);
       });
+    }
+  }
+
+  initAutoRotateListener() {
+    const handleOrientation = () => {
+      // Small timeout to allow browser layout to complete
+      setTimeout(() => {
+        if (this.container && this.streamImg) {
+          // Trigger layout recalculation
+          const rect = this.container.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            // Container resized smoothly
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('resize', handleOrientation);
+    window.addEventListener('orientationchange', handleOrientation);
+    if (screen.orientation) {
+      screen.orientation.addEventListener('change', handleOrientation);
     }
   }
 }

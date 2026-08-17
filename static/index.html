@@ -20,13 +20,53 @@
         <div class="brand">
           <div class="logo-badge">R4</div>
           <span class="brand-text">REMOTE4REAL</span>
-          <span style="font-size: 8px; font-weight: 700; background: #f1f1f4; padding: 2px 4px; border: 1px solid #000; border-radius: 2px; margin-left: 4px;">BY ALCHEMIST4REAL</span>
+          <span class="author-badge">BY ALCHEMIST4REAL</span>
+        </div>
+
+        <!-- CENTER COMPACT MODE DROPDOWN SELECTOR -->
+        <div class="mode-dropdown-wrapper">
+          <button id="btn-mode-dropdown" class="mode-select-pill" title="Select Control Mode">
+            <span id="current-mode-name">TRACKPAD</span>
+            <svg class="svg-caret" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+
+          <div id="mode-dropdown-menu" class="dropdown-menu-card hidden">
+            <button class="mode-option-item active" data-mode="touchpad">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-4h16v4zm0-6H4V6h16v6z"/></svg>
+              <span>TRACKPAD</span>
+            </button>
+            <button class="mode-option-item" data-mode="keyboard">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+              <span>KEYBOARD ONLY</span>
+            </button>
+            <button class="mode-option-item" data-mode="keypad">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm2 2v6h14V5H5zm0 8v6h6v-6H5zm8 0v6h6v-6h-6z"/></svg>
+              <span>KEYS + TRACKPAD</span>
+            </button>
+            <button class="mode-option-item" data-mode="screen">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.11-.9-2-2-2H4c-1.11 0-2 .89-2 2v10c0 1.1.89 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+              <span>TOUCHSCREEN STREAM</span>
+            </button>
+            <button class="mode-option-item" data-mode="media">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+              <span>MEDIA REMOTE</span>
+            </button>
+            <button class="mode-option-item" data-mode="gamepad">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H9v2H7v-2H5v-2h2V9h2v2h2v2zm4.5 1c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+              <span>GAMEPAD</span>
+            </button>
+          </div>
         </div>
 
         <div class="header-actions">
-          <button id="btn-scan-qr" class="action-icon-btn highlight-btn" title="Scan QR Code">
+          <button id="btn-download-app" class="action-icon-btn" title="Download & Install App">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+            <span class="btn-label-sub">APP</span>
+          </button>
+
+          <button id="btn-scan-qr" class="action-icon-btn highlight-btn" title="Connect via QR">
             <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm-2-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 0h2v2h-2v-2zM14 4h-2v6h2V4zm0 8h-2v2h2v-2zm-4 2H8v2h2v-2z"/></svg>
-            <span class="btn-label-sub">SCAN</span>
+            <span class="btn-label-sub">QR</span>
           </button>
 
           <div id="ping-indicator" class="status-pill disconnected" title="Connection Status">
@@ -36,7 +76,6 @@
 
           <button id="btn-rotate-screen" class="action-icon-btn" title="Rotate Screen">
             <svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 7h10v2l3-3-3-3v2H5v6h2V7zm10 10H7v-2l-3 3 3 3v-2h12v-6h-2v4z"/></svg>
-            <span class="btn-label-sub">ROTATE</span>
           </button>
 
           <button id="btn-fullscreen" class="action-icon-btn" title="Fullscreen">
@@ -48,6 +87,12 @@
           </button>
         </div>
       </header>
+
+      <!-- FLOATING EXIT FULLSCREEN BUTTON (VISIBLE IN FULLSCREEN) -->
+      <button id="btn-exit-fullscreen" class="floating-exit-fs-btn" title="Exit Fullscreen">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+        <span>EXIT FULLSCREEN</span>
+      </button>
 
       <!-- MAIN INTERACTIVE CONTROLLER VIEWS -->
       <main id="view-container">
@@ -64,6 +109,8 @@
             <button class="key-chip" data-combo="ctrl,z">UNDO</button>
             <button class="key-chip" data-combo="win,d">DESKTOP</button>
             <button class="key-chip" data-combo="alt,tab">ALT+TAB</button>
+            <button class="key-chip" data-combo="ctrl,shift,esc">TASKMGR</button>
+            <button class="key-chip" data-combo="alt,f4">CLOSE</button>
             <button class="key-chip" data-key="esc">ESC</button>
             <button class="key-chip" data-key="tab">TAB</button>
             <button class="key-chip" data-key="enter">ENTER</button>
@@ -76,12 +123,13 @@
               <span class="hud-pill">1-FINGER MOVE • TAP CLICK • 2-FINGER SCROLL</span>
             </div>
             <div id="touch-ripple-container"></div>
+            <button class="mode-fs-pill-btn btn-trigger-fs" title="Fullscreen">⛶ FS</button>
           </div>
 
           <!-- Native Phone Keyboard Typing Dock -->
           <div class="deck-typing-dock">
             <div class="typing-dock-inner">
-              <input type="text" id="deck-native-input" placeholder="TYPE OR USE VOICE INPUT HERE..." autocomplete="off" autocapitalize="off" spellcheck="false">
+              <input type="text" id="deck-native-input" placeholder="TYPE OR USE VOICE INPUT..." autocomplete="off" autocapitalize="off" spellcheck="false">
               <button id="btn-deck-send" class="deck-action-btn">OK</button>
               <button id="btn-deck-clear" class="deck-clear-btn" title="Clear">CLR</button>
             </div>
@@ -102,7 +150,212 @@
         </section>
 
         <!-- ============================================== -->
-        <!-- 2. TOUCHSCREEN LAPTOP SCREEN MIRROR MODE       -->
+        <!-- 2. FULL VIRTUAL QWERTY KEYBOARD MODE           -->
+        <!-- ============================================== -->
+        <section id="mode-keyboard" class="controller-mode-view">
+          <div class="virtual-keyboard-container">
+            
+            <!-- Function Keys Row (Horizontal Scroll) -->
+            <div class="vkey-row vkey-fn-row">
+              <button class="vkey fn-key" data-vkey="esc">ESC</button>
+              <button class="vkey fn-key" data-vkey="f1">F1</button>
+              <button class="vkey fn-key" data-vkey="f2">F2</button>
+              <button class="vkey fn-key" data-vkey="f3">F3</button>
+              <button class="vkey fn-key" data-vkey="f4">F4</button>
+              <button class="vkey fn-key" data-vkey="f5">F5</button>
+              <button class="vkey fn-key" data-vkey="f6">F6</button>
+              <button class="vkey fn-key" data-vkey="f7">F7</button>
+              <button class="vkey fn-key" data-vkey="f8">F8</button>
+              <button class="vkey fn-key" data-vkey="f9">F9</button>
+              <button class="vkey fn-key" data-vkey="f10">F10</button>
+              <button class="vkey fn-key" data-vkey="f11">F11</button>
+              <button class="vkey fn-key" data-vkey="f12">F12</button>
+              <button class="vkey fn-key" data-vcombo="alt,f4">ALT+F4</button>
+              <button class="vkey fn-key vkey-repeat" data-vkey="delete">DEL</button>
+              <button class="vkey fn-key btn-trigger-fs">⛶ FS</button>
+            </div>
+
+            <!-- Number Row -->
+            <div class="vkey-row">
+              <button class="vkey" data-vkey="`">`</button>
+              <button class="vkey" data-vkey="1">1</button>
+              <button class="vkey" data-vkey="2">2</button>
+              <button class="vkey" data-vkey="3">3</button>
+              <button class="vkey" data-vkey="4">4</button>
+              <button class="vkey" data-vkey="5">5</button>
+              <button class="vkey" data-vkey="6">6</button>
+              <button class="vkey" data-vkey="7">7</button>
+              <button class="vkey" data-vkey="8">8</button>
+              <button class="vkey" data-vkey="9">9</button>
+              <button class="vkey" data-vkey="0">0</button>
+              <button class="vkey" data-vkey="-">-</button>
+              <button class="vkey" data-vkey="=">=</button>
+              <button class="vkey vkey-repeat vkey-bksp" data-vkey="backspace">⌫</button>
+            </div>
+
+            <!-- QWERTY Row 1 -->
+            <div class="vkey-row">
+              <button class="vkey vkey-tab" data-vkey="tab">TAB</button>
+              <button class="vkey vkey-letter" data-vkey="q">q</button>
+              <button class="vkey vkey-letter" data-vkey="w">w</button>
+              <button class="vkey vkey-letter" data-vkey="e">e</button>
+              <button class="vkey vkey-letter" data-vkey="r">r</button>
+              <button class="vkey vkey-letter" data-vkey="t">t</button>
+              <button class="vkey vkey-letter" data-vkey="y">y</button>
+              <button class="vkey vkey-letter" data-vkey="u">u</button>
+              <button class="vkey vkey-letter" data-vkey="i">i</button>
+              <button class="vkey vkey-letter" data-vkey="o">o</button>
+              <button class="vkey vkey-letter" data-vkey="p">p</button>
+              <button class="vkey" data-vkey="[">[</button>
+              <button class="vkey" data-vkey="]">]</button>
+              <button class="vkey" data-vkey="\">\</button>
+            </div>
+
+            <!-- QWERTY Row 2 -->
+            <div class="vkey-row">
+              <button class="vkey vkey-caps" id="vkey-caps">CAPS</button>
+              <button class="vkey vkey-letter" data-vkey="a">a</button>
+              <button class="vkey vkey-letter" data-vkey="s">s</button>
+              <button class="vkey vkey-letter" data-vkey="d">d</button>
+              <button class="vkey vkey-letter" data-vkey="f">f</button>
+              <button class="vkey vkey-letter" data-vkey="g">g</button>
+              <button class="vkey vkey-letter" data-vkey="h">h</button>
+              <button class="vkey vkey-letter" data-vkey="j">j</button>
+              <button class="vkey vkey-letter" data-vkey="k">k</button>
+              <button class="vkey vkey-letter" data-vkey="l">l</button>
+              <button class="vkey" data-vkey=";">;</button>
+              <button class="vkey" data-vkey="'">'</button>
+              <button class="vkey vkey-enter" data-vkey="enter">ENTER</button>
+            </div>
+
+            <!-- QWERTY Row 3 -->
+            <div class="vkey-row">
+              <button class="vkey vkey-mod" data-vmod="shift">SHIFT</button>
+              <button class="vkey vkey-letter" data-vkey="z">z</button>
+              <button class="vkey vkey-letter" data-vkey="x">x</button>
+              <button class="vkey vkey-letter" data-vkey="c">c</button>
+              <button class="vkey vkey-letter" data-vkey="v">v</button>
+              <button class="vkey vkey-letter" data-vkey="b">b</button>
+              <button class="vkey vkey-letter" data-vkey="n">n</button>
+              <button class="vkey vkey-letter" data-vkey="m">m</button>
+              <button class="vkey" data-vkey=",">,</button>
+              <button class="vkey" data-vkey=".">.</button>
+              <button class="vkey" data-vkey="/">/</button>
+              <button class="vkey vkey-repeat" data-vkey="up">▲</button>
+              <button class="vkey vkey-mod" data-vmod="shift">SHIFT</button>
+            </div>
+
+            <!-- Modifiers & Space Row -->
+            <div class="vkey-row">
+              <button class="vkey vkey-mod" data-vmod="ctrl">CTRL</button>
+              <button class="vkey vkey-mod" data-vmod="win">WIN</button>
+              <button class="vkey vkey-mod" data-vmod="alt">ALT</button>
+              <button class="vkey vkey-space" data-vkey="space">SPACE</button>
+              <button class="vkey vkey-mod" data-vmod="alt">ALT</button>
+              <button class="vkey vkey-repeat" data-vkey="left">◀</button>
+              <button class="vkey vkey-repeat" data-vkey="down">▼</button>
+              <button class="vkey vkey-repeat" data-vkey="right">▶</button>
+              <button class="vkey vkey-mod" data-vmod="ctrl">CTRL</button>
+            </div>
+
+            <!-- Native Phone Keyboard Typing Dock -->
+            <div class="deck-typing-dock">
+              <div class="typing-dock-inner">
+                <input type="text" id="keyboard-native-input" placeholder="PHONE KEYBOARD / VOICE INPUT..." autocomplete="off" autocapitalize="off" spellcheck="false">
+                <button id="btn-keyboard-send" class="deck-action-btn">OK</button>
+                <button id="btn-keyboard-clear" class="deck-clear-btn" title="Clear">CLR</button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 3. SPLIT KEYS + TRACKPAD MODE                  -->
+        <!-- ============================================== -->
+        <section id="mode-keypad" class="controller-mode-view">
+          <div class="keypad-split-container">
+            
+            <!-- Top Half: Compact Touchpad -->
+            <div class="keypad-touchpad-box">
+              <div class="touchpad-surface" id="touchpad-area-split">
+                <div class="touchpad-guide-hud">
+                  <span class="hud-pill">SPLIT TRACKPAD</span>
+                </div>
+                <button class="mode-fs-pill-btn btn-trigger-fs" title="Fullscreen">⛶ FS</button>
+              </div>
+              <div class="mouse-action-bar compact-mouse-bar">
+                <button class="mouse-btn left-btn" data-key="mouse_left"><span>LEFT</span></button>
+                <button class="mouse-btn middle-btn" data-key="mouse_middle"><span>MID</span></button>
+                <button class="mouse-btn right-btn" data-key="mouse_right"><span>RIGHT</span></button>
+              </div>
+            </div>
+
+            <!-- Bottom Half: Compact Keyboard -->
+            <div class="keypad-keyboard-box">
+              <div class="vkey-row">
+                <button class="vkey fn-key" data-vkey="esc">ESC</button>
+                <button class="vkey vkey-letter" data-vkey="q">Q</button>
+                <button class="vkey vkey-letter" data-vkey="w">W</button>
+                <button class="vkey vkey-letter" data-vkey="e">E</button>
+                <button class="vkey vkey-letter" data-vkey="r">R</button>
+                <button class="vkey vkey-letter" data-vkey="t">T</button>
+                <button class="vkey vkey-letter" data-vkey="y">Y</button>
+                <button class="vkey vkey-letter" data-vkey="u">U</button>
+                <button class="vkey vkey-letter" data-vkey="i">I</button>
+                <button class="vkey vkey-letter" data-vkey="o">O</button>
+                <button class="vkey vkey-letter" data-vkey="p">P</button>
+                <button class="vkey vkey-repeat" data-vkey="backspace">⌫</button>
+              </div>
+              <div class="vkey-row">
+                <button class="vkey vkey-tab" data-vkey="tab">TAB</button>
+                <button class="vkey vkey-letter" data-vkey="a">A</button>
+                <button class="vkey vkey-letter" data-vkey="s">S</button>
+                <button class="vkey vkey-letter" data-vkey="d">D</button>
+                <button class="vkey vkey-letter" data-vkey="f">F</button>
+                <button class="vkey vkey-letter" data-vkey="g">G</button>
+                <button class="vkey vkey-letter" data-vkey="h">H</button>
+                <button class="vkey vkey-letter" data-vkey="j">J</button>
+                <button class="vkey vkey-letter" data-vkey="k">K</button>
+                <button class="vkey vkey-letter" data-vkey="l">L</button>
+                <button class="vkey vkey-enter" data-vkey="enter">ENTER</button>
+              </div>
+              <div class="vkey-row">
+                <button class="vkey vkey-mod" data-vmod="ctrl">CTRL</button>
+                <button class="vkey vkey-mod" data-vmod="shift">SHIFT</button>
+                <button class="vkey vkey-letter" data-vkey="z">Z</button>
+                <button class="vkey vkey-letter" data-vkey="x">X</button>
+                <button class="vkey vkey-letter" data-vkey="c">C</button>
+                <button class="vkey vkey-letter" data-vkey="v">V</button>
+                <button class="vkey vkey-letter" data-vkey="b">B</button>
+                <button class="vkey vkey-letter" data-vkey="n">N</button>
+                <button class="vkey vkey-letter" data-vkey="m">M</button>
+                <button class="vkey vkey-repeat" data-vkey="up">▲</button>
+                <button class="vkey vkey-mod" data-vmod="alt">ALT</button>
+              </div>
+              <div class="vkey-row">
+                <button class="vkey vkey-mod" data-vmod="win">WIN</button>
+                <button class="vkey vkey-space" data-vkey="space">SPACE</button>
+                <button class="vkey vkey-repeat" data-vkey="left">◀</button>
+                <button class="vkey vkey-repeat" data-vkey="down">▼</button>
+                <button class="vkey vkey-repeat" data-vkey="right">▶</button>
+              </div>
+
+              <!-- Native Phone Keyboard Typing Dock -->
+              <div class="deck-typing-dock">
+                <div class="typing-dock-inner">
+                  <input type="text" id="keypad-native-input" placeholder="VOICE / TYPE HERE..." autocomplete="off" autocapitalize="off" spellcheck="false">
+                  <button id="btn-keypad-send" class="deck-action-btn">OK</button>
+                  <button id="btn-keypad-clear" class="deck-clear-btn" title="Clear">CLR</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- 4. TOUCHSCREEN LAPTOP SCREEN MIRROR MODE       -->
         <!-- ============================================== -->
         <section id="mode-screen" class="controller-mode-view">
           
@@ -110,8 +363,8 @@
           <div class="screen-floating-toolbar">
             <button id="btn-screen-fit" class="screen-tool-btn active">FIT</button>
             <button id="btn-screen-fill" class="screen-tool-btn">FILL</button>
-            <button id="btn-screen-keys" class="screen-tool-btn">KEYS</button>
             <button id="btn-screen-reconnect" class="screen-tool-btn">RECONNECT</button>
+            <button class="screen-tool-btn btn-trigger-fs">⛶ FULLSCREEN</button>
             <span id="screen-fps-counter" class="screen-fps-badge">0 FPS</span>
           </div>
 
@@ -126,7 +379,7 @@
         </section>
 
         <!-- ============================================== -->
-        <!-- 3. MEDIA DECK (YOUTUBE & SPOTIFY REMOTE)       -->
+        <!-- 5. MEDIA DECK (YOUTUBE & SPOTIFY REMOTE)       -->
         <!-- ============================================== -->
         <section id="mode-media" class="controller-mode-view">
           
@@ -144,17 +397,20 @@
 
           <!-- YOUTUBE PANEL -->
           <div id="media-panel-yt" class="media-panel active">
-            <button class="launcher-cta-btn" id="btn-yt-launch">
-              <div class="cta-left">
-                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-                <span class="cta-text">OPEN YOUTUBE IN BROWSER</span>
-              </div>
-              <span class="cta-arrow">-&gt;</span>
-            </button>
+            
+            <!-- Browser Action Strip -->
+            <div class="media-action-strip">
+              <button class="strip-btn highlight" id="btn-yt-launch">OPEN IN BROWSER</button>
+              <button class="strip-btn" id="btn-yt-new-tab">+ NEW TAB</button>
+              <button class="strip-btn" id="btn-yt-nav-back">◀ BACK</button>
+              <button class="strip-btn danger" id="btn-yt-close-tab">✕ CLOSE TAB</button>
+            </div>
 
+            <!-- YouTube Search (Active Tab vs New Search) -->
             <div class="yt-search-box">
-              <input type="text" id="yt-search-input" placeholder="SEARCH YOUTUBE VIDEO..." autocomplete="off">
-              <button id="btn-yt-search" class="yt-search-btn">SEARCH</button>
+              <input type="text" id="yt-search-input" placeholder="SEARCH VIDEO IN YOUTUBE..." autocomplete="off">
+              <button id="btn-yt-search-tab" class="yt-search-btn" title="Search in active YouTube tab">IN TAB</button>
+              <button id="btn-yt-search" class="yt-search-btn highlight" title="Open search in browser">BROWSER</button>
             </div>
 
             <div class="media-hero-card">
@@ -195,13 +451,20 @@
 
           <!-- SPOTIFY PANEL -->
           <div id="media-panel-spotify" class="media-panel">
-            <button class="launcher-cta-btn" id="btn-spotify-launch">
-              <div class="cta-left">
-                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-                <span class="cta-text">LAUNCH SPOTIFY APP</span>
-              </div>
-              <span class="cta-arrow">-&gt;</span>
-            </button>
+            
+            <!-- Spotify Action Strip -->
+            <div class="media-action-strip">
+              <button class="strip-btn highlight" id="btn-spotify-launch">LAUNCH APP</button>
+              <button class="strip-btn" id="btn-spotify-home">HOME</button>
+              <button class="strip-btn" id="btn-spotify-library">LIBRARY</button>
+              <button class="strip-btn danger" id="btn-spotify-close-app">✕ CLOSE APP</button>
+            </div>
+
+            <!-- Spotify App Search -->
+            <div class="yt-search-box">
+              <input type="text" id="spotify-search-input" placeholder="SEARCH IN SPOTIFY APP..." autocomplete="off">
+              <button id="btn-spotify-search" class="yt-search-btn highlight">SEARCH</button>
+            </div>
 
             <div class="media-hero-card">
               <div class="hero-top-row">
@@ -236,34 +499,35 @@
         </section>
 
         <!-- ============================================== -->
-        <!-- 4. CONSOLE GAMEPAD MODE                        -->
+        <!-- 6. CONSOLE GAMEPAD MODE                        -->
         <!-- ============================================== -->
         <section id="mode-gamepad" class="controller-mode-view">
-          <div class="gamepad-container">
+          <div class="gamepad-container realistic-gamepad">
             
             <!-- Top Shoulder Triggers -->
             <div class="gamepad-shoulders">
               <div class="shoulder-group left-shoulder">
-                <button class="gp-shoulder-btn" id="gp-btn-lt" data-btn="lt">
+                <button class="gp-shoulder-btn trigger-btn" id="gp-btn-lt" data-btn="lt">
                   <span>LT</span>
-                  <div class="trigger-bar"><div class="trigger-fill" id="lt-gauge"></div></div>
+                  <div class="trigger-bar"><div class="trigger-fill" id="fill-lt"></div></div>
                 </button>
-                <button class="gp-shoulder-btn" id="gp-btn-lb" data-btn="lb"><span>LB</span></button>
+                <button class="gp-shoulder-btn bumper-btn" id="gp-btn-lb" data-btn="lb"><span>LB</span></button>
               </div>
 
               <!-- Center Navigation Controls -->
               <div class="gamepad-center">
                 <button class="gp-center-btn" id="gp-btn-select" data-btn="select">BACK</button>
-                <button class="gp-center-btn" id="gp-btn-home" data-btn="home">WIN</button>
+                <button class="gp-center-btn gp-home-logo" id="gp-btn-home" data-btn="home">R4</button>
                 <button class="gp-center-btn" id="gp-btn-start" data-btn="start">START</button>
-                <button class="gp-center-btn" id="gp-btn-gyro" data-btn="gyro">GYRO</button>
+                <button class="gp-center-btn gp-gyro-btn" id="btn-gyro-toggle">GYRO</button>
+                <button class="gp-center-btn btn-trigger-fs">⛶ FS</button>
               </div>
 
               <div class="shoulder-group right-shoulder">
-                <button class="gp-shoulder-btn" id="gp-btn-rb" data-btn="rb"><span>RB</span></button>
-                <button class="gp-shoulder-btn" id="gp-btn-rt" data-btn="rt">
+                <button class="gp-shoulder-btn bumper-btn" id="gp-btn-rb" data-btn="rb"><span>RB</span></button>
+                <button class="gp-shoulder-btn trigger-btn" id="gp-btn-rt" data-btn="rt">
                   <span>RT</span>
-                  <div class="trigger-bar"><div class="trigger-fill" id="rt-gauge"></div></div>
+                  <div class="trigger-bar"><div class="trigger-fill" id="fill-rt"></div></div>
                 </button>
               </div>
             </div>
@@ -271,7 +535,7 @@
             <!-- Main Dual Pods Area -->
             <div class="gamepad-main-area">
               
-              <!-- Left Control Pod: Left Stick (Movement) + D-Pad -->
+              <!-- Left Control Pod: Left Stick (Movement) + Tactile Cross D-Pad -->
               <div class="control-pod left-pod">
                 <div class="joystick-zone" id="joystick-left-zone">
                   <div class="joystick-base" id="stick-left-base">
@@ -283,20 +547,20 @@
                   </div>
                 </div>
 
-                <div class="dpad-cluster">
-                  <button class="dpad-btn dpad-up" data-btn="dpad_up"><span>U</span></button>
+                <div class="dpad-cluster tactile-cross-dpad">
+                  <button class="dpad-btn dpad-up" data-btn="dpad_up"><span>▲</span></button>
                   <div class="dpad-middle-row">
-                    <button class="dpad-btn dpad-left" data-btn="dpad_left"><span>L</span></button>
+                    <button class="dpad-btn dpad-left" data-btn="dpad_left"><span>◀</span></button>
                     <div class="dpad-center-hub"></div>
-                    <button class="dpad-btn dpad-right" data-btn="dpad_right"><span>R</span></button>
+                    <button class="dpad-btn dpad-right" data-btn="dpad_right"><span>▶</span></button>
                   </div>
-                  <button class="dpad-btn dpad-down" data-btn="dpad_down"><span>D</span></button>
+                  <button class="dpad-btn dpad-down" data-btn="dpad_down"><span>▼</span></button>
                 </div>
               </div>
 
-              <!-- Right Control Pod: ABXY Cluster + Right Analog Stick (Aim) -->
+              <!-- Right Control Pod: Color-Coded ABXY Cluster + Right Analog Stick (Aim) -->
               <div class="control-pod right-pod">
-                <div class="abxy-cluster">
+                <div class="abxy-cluster realistic-abxy">
                   <button class="action-btn abxy-y" data-btn="y"><span>Y</span></button>
                   <div class="abxy-middle-row">
                     <button class="action-btn abxy-x" data-btn="x"><span>X</span></button>
@@ -322,28 +586,6 @@
         </section>
 
       </main>
-
-      <!-- STREAMLINED 4-MODE BOTTOM DOCK (ZERO OVERFLOW) -->
-      <footer id="bottom-dock">
-        <nav id="dock-nav">
-          <button class="dock-item active" data-mode="touchpad" id="dock-tab-touchpad">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-4h16v4zm0-6H4V6h16v6z"/></svg>
-            <span class="dock-label">TRACKPAD</span>
-          </button>
-          <button class="dock-item" data-mode="screen" id="dock-tab-screen">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.11-.9-2-2-2H4c-1.11 0-2 .89-2 2v10c0 1.1.89 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
-            <span class="dock-label">SCREEN</span>
-          </button>
-          <button class="dock-item" data-mode="media" id="dock-tab-media">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-            <span class="dock-label">MEDIA</span>
-          </button>
-          <button class="dock-item" data-mode="gamepad" id="dock-tab-gamepad">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H9v2H7v-2H5v-2h2V9h2v2h2v2zm4.5 1c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-            <span class="dock-label">GAMEPAD</span>
-          </button>
-        </nav>
-      </footer>
 
       <!-- ============================================== -->
       <!-- SECURITY PIN LOCK OVERLAY MODAL                -->
@@ -393,8 +635,8 @@
       <div id="qr-scanner-modal" class="modal-overlay hidden">
         <div class="modal-card scanner-card">
           <div class="modal-header">
-            <h3>SCAN DESKTOP QR CODE</h3>
-            <button id="btn-close-scanner" class="btn-icon">X</button>
+            <h3>CONNECT VIA QR</h3>
+            <button id="btn-close-scanner" class="btn-icon">✕</button>
           </div>
           <div class="scanner-body">
             <div class="camera-viewport-wrapper">
@@ -408,17 +650,61 @@
                 <div class="reticle-laser"></div>
               </div>
             </div>
-            <div id="scanner-status-text" class="scanner-status-hint">POINT CAMERA AT PC SCREEN QR CODE</div>
+            <div id="scanner-status-text" class="scanner-status-hint">POINT CAMERA AT PC COMPANION QR CODE</div>
           </div>
         </div>
       </div>
 
-      <!-- SETTINGS MODAL -->
+      <!-- ============================================== -->
+      <!-- DOWNLOAD & INSTALL HUB MODAL                   -->
+      <!-- ============================================== -->
+      <div id="download-modal" class="modal-overlay hidden">
+        <div class="modal-card download-card">
+          <div class="modal-header">
+            <div class="pin-title-group">
+              <div class="logo-badge">R4</div>
+              <h3>INSTALL REMOTE4REAL</h3>
+            </div>
+            <button id="btn-close-download" class="btn-icon">✕</button>
+          </div>
+          <div class="modal-body">
+            
+            <div class="download-section">
+              <div class="section-badge">WINDOWS PC (HOST)</div>
+              <p class="download-desc">One-command automatic installer. Installs Python, dependencies, gamepad drivers, and starts Companion:</p>
+              <div class="code-box">
+                <code>irm https://remote4real.vercel.app/install.ps1 | iex</code>
+              </div>
+              <button id="btn-copy-install-cmd" class="modal-full-btn highlight">COPY POWERSHELL COMMAND</button>
+              
+              <div style="margin-top: 8px; text-align: center;">
+                <a href="https://github.com/alchemist4real/REMOTE4REAL/releases" target="_blank" class="download-link-text">
+                  OR DOWNLOAD WINDOWS EXE INSTALLER →
+                </a>
+              </div>
+            </div>
+
+            <div class="download-section" style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
+              <div class="section-badge">MOBILE (CLIENT)</div>
+              <p class="download-desc">Works instantly in any mobile browser (Chrome / Safari). To use fullscreen without browser bars, tap <strong>Share / Menu → Add to Home Screen</strong>.</p>
+            </div>
+
+            <div style="margin-top: 12px; text-align: center; font-size: 10px; font-weight: 700; color: #888; border-top: 1px solid #eee; padding-top: 8px;">
+              ENGINEERED BY ALCHEMIST4REAL
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- SETTINGS MODAL                                 -->
+      <!-- ============================================== -->
       <div id="settings-modal" class="modal-overlay hidden">
         <div class="modal-card">
           <div class="modal-header">
             <h3>SETTINGS</h3>
-            <button id="btn-close-settings" class="btn-icon">X</button>
+            <button id="btn-close-settings" class="btn-icon">✕</button>
           </div>
           <div class="modal-body">
             <div class="setting-group">
@@ -445,6 +731,8 @@
   </div>
 
   <script src="js/touchpad.js"></script>
+  <script src="js/virtual_keyboard.js"></script>
+  <script src="js/keyboard.js"></script>
   <script src="js/screen.js"></script>
   <script src="js/media.js"></script>
   <script src="js/gamepad.js"></script>

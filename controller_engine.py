@@ -414,8 +414,29 @@ class WindowsInputController:
     # ==========================================
     def handle_youtube_command(self, cmd: str, query: str = ""):
         cmd = cmd.lower().strip()
-        if cmd == "launch" or cmd == "search":
+        if cmd == "launch":
             self.launch_youtube(query)
+        elif cmd == "search":
+            if query:
+                self.launch_youtube(query)
+            else:
+                self.launch_youtube()
+        elif cmd == "search_in_tab":
+            # Press '/' to focus YouTube search box, clear existing text if needed, type query, press Enter
+            self.key_event('/', 'tap')
+            time.sleep(0.08)
+            if query:
+                self.key_combination(['ctrl', 'a'])
+                time.sleep(0.02)
+                self.type_string(query)
+                time.sleep(0.05)
+                self.key_event('enter', 'tap')
+        elif cmd == "close_tab":
+            self.key_combination(['ctrl', 'w'])
+        elif cmd == "new_tab":
+            self.key_combination(['ctrl', 't'])
+        elif cmd == "nav_back":
+            self.key_combination(['alt', 'left'])
         elif cmd == "play_pause":
             self.key_event('k', 'tap')
         elif cmd == "seek_fwd_10":
@@ -449,10 +470,26 @@ class WindowsInputController:
         elif cmd == "volume_down":
             self.key_event('down', 'tap')
 
-    def handle_spotify_command(self, cmd: str):
+    def handle_spotify_command(self, cmd: str, query: str = ""):
         cmd = cmd.lower().strip()
         if cmd == "open" or cmd == "launch":
             self.launch_spotify()
+        elif cmd == "search_in_app":
+            # In Spotify, Ctrl+L or Ctrl+K focuses the search field
+            self.key_combination(['ctrl', 'l'])
+            time.sleep(0.08)
+            if query:
+                self.key_combination(['ctrl', 'a'])
+                time.sleep(0.02)
+                self.type_string(query)
+                time.sleep(0.05)
+                self.key_event('enter', 'tap')
+        elif cmd == "close_app":
+            self.key_combination(['alt', 'f4'])
+        elif cmd == "go_home":
+            self.key_combination(['alt', 'left'])
+        elif cmd == "go_library":
+            self.key_combination(['ctrl', 'alt', '2'])
         elif cmd == "play_pause":
             self.key_event('media_play_pause', 'tap')
         elif cmd == "next":
@@ -603,3 +640,30 @@ class WindowsInputController:
             else:
                 self.key_event('a', 'up')
                 self.key_event('d', 'up')
+
+    # ==========================================
+    # ALIASES FOR MAXIMUM CROSS-VERSION STABILITY
+    # ==========================================
+    def scroll(self, dx: float = 0, dy: float = 0):
+        self.mouse_scroll(dx, dy)
+
+    def key_press(self, key_name: str, action: str = 'tap'):
+        self.key_event(key_name, action)
+
+    def hotkey(self, *keys):
+        self.key_combination(list(keys))
+
+    def type_string(self, text: str):
+        self.type_text(text)
+
+    def set_gamepad_stick(self, stick: str, x: float, y: float):
+        self.handle_gamepad_stick(stick, x, y)
+
+    def set_gamepad_button(self, button_name: str, action: str = 'tap'):
+        self.handle_gamepad_button(button_name, action)
+
+    def set_gamepad_trigger(self, trigger: str, value: float):
+        self.handle_gamepad_trigger(trigger, value)
+
+    def handle_gyro_steering(self, gamma: float):
+        self.handle_gyro_steer(gamma)

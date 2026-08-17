@@ -12,6 +12,10 @@ class MediaController {
 
     this.ytSearchInput = document.getElementById('yt-search-input');
     this.ytSearchBtn = document.getElementById('btn-yt-search');
+    this.ytSearchTabBtn = document.getElementById('btn-yt-search-tab');
+
+    this.spotifySearchInput = document.getElementById('spotify-search-input');
+    this.spotifySearchBtn = document.getElementById('btn-spotify-search');
 
     this.initSubtabs();
     this.initYouTubeControls();
@@ -37,41 +41,40 @@ class MediaController {
     };
 
     if (this.subtabYt) {
-      this.subtabYt.addEventListener('click', (e) => { e.preventDefault(); setTab('yt'); });
-      this.subtabYt.addEventListener('touchstart', (e) => { e.preventDefault(); setTab('yt'); }, { passive: false });
+      this.subtabYt.addEventListener('click', (e) => {
+        e.preventDefault();
+        setTab('yt');
+      });
     }
 
     if (this.subtabSpotify) {
-      this.subtabSpotify.addEventListener('click', (e) => { e.preventDefault(); setTab('spotify'); });
-      this.subtabSpotify.addEventListener('touchstart', (e) => { e.preventDefault(); setTab('spotify'); }, { passive: false });
-    }
-
-    document.querySelectorAll('.media-subtab').forEach(tab => {
-      tab.addEventListener('click', (e) => {
+      this.subtabSpotify.addEventListener('click', (e) => {
         e.preventDefault();
-        const target = tab.getAttribute('data-subtab') || (tab.id.includes('spotify') ? 'spotify' : 'yt');
-        setTab(target);
+        setTab('spotify');
       });
-    });
+    }
   }
 
   initYouTubeControls() {
     const bindBtn = (id, cmd, extra = {}) => {
       const btn = document.getElementById(id);
       if (btn) {
-        const handler = (e) => {
+        btn.addEventListener('click', (e) => {
           e.preventDefault();
-          if (window.app && window.app.vibrate) window.app.vibrate(15);
+          if (window.app && window.app.vibrate) window.app.vibrate(12);
           if (window.app && window.app.send) {
             window.app.send({ t: 'yt_cmd', cmd: cmd, ...extra });
           }
-        };
-        btn.addEventListener('click', handler);
-        btn.addEventListener('touchstart', handler, { passive: false });
+        });
       }
     };
 
+    // YouTube Core Controls
     bindBtn('btn-yt-launch', 'launch');
+    bindBtn('btn-yt-close-tab', 'close_tab');
+    bindBtn('btn-yt-new-tab', 'new_tab');
+    bindBtn('btn-yt-nav-back', 'nav_back');
+
     bindBtn('btn-yt-play', 'play_pause');
     bindBtn('btn-yt-prev', 'prev');
     bindBtn('btn-yt-next', 'next');
@@ -89,33 +92,47 @@ class MediaController {
     bindBtn('btn-yt-vol-down', 'volume_down');
     bindBtn('btn-yt-mute', 'mute');
 
-    document.querySelectorAll('[data-yt]').forEach(btn => {
-      const cmd = btn.getAttribute('data-yt');
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.app && window.app.send) window.app.send({ t: 'yt_cmd', cmd: cmd });
-      });
-    });
-
-    if (this.ytSearchBtn && this.ytSearchInput) {
-      const executeSearch = () => {
-        const query = this.ytSearchInput.value.trim();
-        if (query) {
-          if (window.app && window.app.vibrate) window.app.vibrate([20, 40, 20]);
-          if (window.app && window.app.send) {
-            window.app.send({ t: 'yt_cmd', cmd: 'search', q: query });
-          }
+    // YouTube Search in Open Tab (via '/' hotkey)
+    const execTabSearch = () => {
+      if (!this.ytSearchInput) return;
+      const query = this.ytSearchInput.value.trim();
+      if (query) {
+        if (window.app && window.app.vibrate) window.app.vibrate([15, 30, 15]);
+        if (window.app && window.app.send) {
+          window.app.send({ t: 'yt_cmd', cmd: 'search_in_tab', q: query });
         }
-      };
+      }
+    };
 
+    // YouTube Open Search in Browser
+    const execLaunchSearch = () => {
+      if (!this.ytSearchInput) return;
+      const query = this.ytSearchInput.value.trim();
+      if (window.app && window.app.vibrate) window.app.vibrate([20, 40, 20]);
+      if (window.app && window.app.send) {
+        window.app.send({ t: 'yt_cmd', cmd: 'search', q: query });
+      }
+    };
+
+    if (this.ytSearchBtn) {
       this.ytSearchBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        executeSearch();
+        execLaunchSearch();
       });
+    }
+
+    if (this.ytSearchTabBtn) {
+      this.ytSearchTabBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        execTabSearch();
+      });
+    }
+
+    if (this.ytSearchInput) {
       this.ytSearchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          executeSearch();
+          execTabSearch();
         }
       });
     }
@@ -125,19 +142,22 @@ class MediaController {
     const bindBtn = (id, cmd) => {
       const btn = document.getElementById(id);
       if (btn) {
-        const handler = (e) => {
+        btn.addEventListener('click', (e) => {
           e.preventDefault();
-          if (window.app && window.app.vibrate) window.app.vibrate(15);
+          if (window.app && window.app.vibrate) window.app.vibrate(12);
           if (window.app && window.app.send) {
             window.app.send({ t: 'spotify_cmd', cmd: cmd });
           }
-        };
-        btn.addEventListener('click', handler);
-        btn.addEventListener('touchstart', handler, { passive: false });
+        });
       }
     };
 
+    // Spotify Core Controls
     bindBtn('btn-spotify-launch', 'open');
+    bindBtn('btn-spotify-close-app', 'close_app');
+    bindBtn('btn-spotify-home', 'go_home');
+    bindBtn('btn-spotify-library', 'go_library');
+
     bindBtn('btn-spotify-play', 'play_pause');
     bindBtn('btn-spotify-prev', 'prev');
     bindBtn('btn-spotify-next', 'next');
@@ -150,13 +170,33 @@ class MediaController {
     bindBtn('btn-spotify-vol-down', 'volume_down');
     bindBtn('btn-spotify-mute', 'mute');
 
-    document.querySelectorAll('[data-spotify]').forEach(btn => {
-      const cmd = btn.getAttribute('data-spotify');
-      btn.addEventListener('click', (e) => {
+    // Spotify Search inside App
+    const execSpotifySearch = () => {
+      if (!this.spotifySearchInput) return;
+      const query = this.spotifySearchInput.value.trim();
+      if (query) {
+        if (window.app && window.app.vibrate) window.app.vibrate([15, 30, 15]);
+        if (window.app && window.app.send) {
+          window.app.send({ t: 'spotify_cmd', cmd: 'search_in_app', q: query });
+        }
+      }
+    };
+
+    if (this.spotifySearchBtn) {
+      this.spotifySearchBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (window.app && window.app.send) window.app.send({ t: 'spotify_cmd', cmd: cmd });
+        execSpotifySearch();
       });
-    });
+    }
+
+    if (this.spotifySearchInput) {
+      this.spotifySearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          execSpotifySearch();
+        }
+      });
+    }
   }
 }
 

@@ -421,18 +421,18 @@ class ScreenCapturer:
         <div class="installer-card">
           <span class="platform-badge">WINDOWS DESKTOP</span>
           <h3 class="installer-title">PC COMPANION APP</h3>
-          <p class="installer-desc">Standalone 64-bit Windows application with embedded Python runtime, Tkinter GUI, and servers.</p>
+          <p class="installer-desc">Zero-friction automated bootstrap for clean laptops. Installs Python, dependencies, gamepad emulation, firewall rules, and starts GUI:</p>
           
-          <ol class="installer-steps">
-            <li>Navigate to <span>installers/Desktop/</span></li>
-            <li>Run <span>install_desktop_shortcut.bat</span> for 1-click desktop &amp; start menu setup.</li>
-            <li>Or launch <span>REMOTE4REAL-Windows/REMOTE4REAL.exe</span> directly.</li>
-          </ol>
-
-          <div class="copy-command-box">
-            <span>python build_desktop.py</span>
-            <button class="copy-btn" data-code="python build_desktop.py">COPY</button>
+          <div class="copy-command-box" style="margin-bottom: 12px; background: #000; color: #00ff88;">
+            <span style="font-size: 11px;">irm https://remote4real.vercel.app/install.ps1 | iex</span>
+            <button class="copy-btn" data-code="irm https://remote4real.vercel.app/install.ps1 | iex">COPY</button>
           </div>
+
+          <ol class="installer-steps">
+            <li>Run the one-line command above in <span>PowerShell</span>.</li>
+            <li>Or download standalone Windows installer from <a href="https://github.com/alchemist4real/REMOTE4REAL/releases" target="_blank" style="color: #000; font-weight: 700; text-decoration: underline;">GitHub Releases</a>.</li>
+            <li>Or clone repo and double-click <span>run.bat</span>.</li>
+          </ol>
         </div>
 
         <!-- ANDROID APP -->

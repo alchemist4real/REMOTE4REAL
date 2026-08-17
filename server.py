@@ -20,6 +20,8 @@ from socketserver import ThreadingMixIn
 
 from controller_engine import WindowsInputController
 from screen_capture import ScreenCapturer
+from version import __version__, __app_name__, __author__, __github_url__
+import updater
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -151,7 +153,9 @@ class ControllerServer:
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
                     info = {
-                        "name": "REMOTE4REAL",
+                        "name": __app_name__,
+                        "version": __version__,
+                        "author": __author__,
                         "status": "online",
                         "pin_required": True,
                         "connected_devices": len(server_instance.authenticated_clients)
@@ -159,7 +163,33 @@ class ControllerServer:
                     self.wfile.write(json.dumps(info).encode("utf-8"))
                     return
 
-                # 2. Static Assets
+                # 2. API: Version Info
+                if self.path.startswith('/api/version'):
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    info = {
+                        "name": __app_name__,
+                        "version": __version__,
+                        "author": __author__,
+                        "github": __github_url__
+                    }
+                    self.wfile.write(json.dumps(info).encode("utf-8"))
+                    return
+
+                # 3. API: Check Updates
+                if self.path.startswith('/api/update_check'):
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    force = 'force=true' in self.path.lower()
+                    update_info = updater.check_for_updates(force=force)
+                    self.wfile.write(json.dumps(update_info).encode("utf-8"))
+                    return
+
+                # 4. Static Assets
                 super().do_GET()
 
             def end_headers(self):
@@ -376,8 +406,9 @@ class ControllerServer:
         # 5. SPOTIFY REMOTE & LAUNCHER
         elif msg_type in ("spotify_cmd", "spotify_launch"):
             cmd = data.get("cmd", "open")
-            self.input_engine.handle_spotify_command(cmd)
-            self._notify("spotify_cmd", {"cmd": cmd})
+            query = data.get("q", "") or data.get("query", "")
+            self.input_engine.handle_spotify_command(cmd, query)
+            self._notify("spotify_cmd", {"cmd": cmd, "query": query})
 
         # 6. TOUCHPAD GESTURES
         elif msg_type == "touch_move":

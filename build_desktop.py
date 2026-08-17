@@ -8,13 +8,16 @@ import sys
 import shutil
 import subprocess
 
+from version import __version__, __author__, __github_url__, __app_name__
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(BASE_DIR, "dist")
 INSTALLER_DIR = os.path.join(BASE_DIR, "installers", "Desktop")
 
 def build_desktop_app():
     print("=" * 60)
-    print("Building REMOTE4REAL Desktop Windows Application...")
+    print(f"Building REMOTE4REAL v{__version__} Desktop Windows Application...")
+    print(f"Author: {__author__}")
     print("=" * 60)
 
     # 1. Ensure icon exists
@@ -37,6 +40,8 @@ def build_desktop_app():
         "--icon", icon_path,
         "--add-data", f"static{os.pathsep}static",
         "--add-data", f"app_icon.ico{os.pathsep}.",
+        "--add-data", f"r4r_theme.json{os.pathsep}.",
+        "--collect-all", "customtkinter",
         "--clean",
         os.path.join(BASE_DIR, "gui_app.py")
     ]
@@ -111,25 +116,25 @@ pause
     # 5. Generate Inno Setup Script for full Setup Wizard Installer
     inno_script = os.path.join(INSTALLER_DIR, "REMOTE4REAL_Setup.iss")
     with open(inno_script, "w", encoding="utf-8") as f:
-        f.write('''.\n; Inno Setup Script for REMOTE4REAL
-#define MyAppName "REMOTE4REAL"
-#define MyAppVersion "1.0.0"
-#define MyAppPublisher "REMOTE4REAL Team"
-#define MyAppURL "https://github.com/remote4real"
+        f.write(f'''; Inno Setup Script for REMOTE4REAL
+#define MyAppName "{__app_name__}"
+#define MyAppVersion "{__version__}"
+#define MyAppPublisher "{__author__}"
+#define MyAppURL "{__github_url__}"
 #define MyAppExeName "REMOTE4REAL.exe"
 
 [Setup]
-AppId={{9C5E558E-5A1D-4C91-9F1B-94E5B1A832A1}
-AppName={#MyAppName}
-AppVersion={#MyAppVersion}
-AppPublisher={#MyAppPublisher}
-AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
-DefaultDirName={autopf}\\{#MyAppName}
+AppId={{9C5E558E-5A1D-4C91-9F1B-94E5B1A832A1}}
+AppName={{#MyAppName}}
+AppVersion={{#MyAppVersion}}
+AppPublisher={{#MyAppPublisher}}
+AppPublisherURL={{#MyAppURL}}
+AppSupportURL={{#MyAppURL}}
+AppUpdatesURL={{#MyAppURL}}/releases
+DefaultDirName={{autopf}}\\{{#MyAppName}}
 DisableProgramGroupPage=yes
 OutputDir=.
-OutputBaseFilename=REMOTE4REAL_Windows_Setup_v1.0.0
+OutputBaseFilename=REMOTE4REAL_Windows_Setup_v{__version__}
 SetupIconFile=..\\..\\app_icon.ico
 Compression=lzma
 SolidCompression=yes
@@ -139,26 +144,26 @@ WizardStyle=modern
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{{cm:CreateDesktopIcon}}"; GroupDescription: "{{cm:AdditionalIcons}}"; Flags: unchecked
 
 [Files]
-Source: "REMOTE4REAL-Windows\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "REMOTE4REAL-Windows\\*"; DestDir: "{{app}}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"
-Name: "{autodesktop}\\{#MyAppName}"; Filename: "{app}\\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{{autoprograms}}\\{{#MyAppName}}"; Filename: "{{app}}\\{{#MyAppExeName}}"
+Name: "{{autodesktop}}\\{{#MyAppName}}"; Filename: "{{app}}\\{{#MyAppExeName}}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{{app}}\\{{#MyAppExeName}}"; Description: "{{cm:LaunchProgram,{{#StringChange(MyAppName, '&', '&&')}}}}"; Flags: nowait postinstall skipifsilent
 ''')
     print(f"Generated Inno Setup Script: {inno_script}")
 
     # 6. Create README for Desktop Package
     readme_path = os.path.join(INSTALLER_DIR, "README.md")
     with open(readme_path, "w", encoding="utf-8") as f:
-        f.write('''# REMOTE4REAL — Desktop Windows Package
+        f.write(f'''# REMOTE4REAL — Desktop Windows Package (v{__version__})
 
-This directory contains the standalone Windows package and installers for **REMOTE4REAL Desktop Companion Server**.
+This directory contains the standalone Windows package and installers for **REMOTE4REAL Desktop Companion Server** by `{__author__}`.
 
 ---
 

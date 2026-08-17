@@ -1,6 +1,8 @@
 /**
  * REMOTE4REAL — Core Client Engine
- * Features: PIN Authentication, In-App Camera QR Scanner, Multi-Device Networking, Gestures, & UI Controls.
+ * Features: PIN Authentication, Dropdown Mode Selector, Fullscreen Engine, 
+ * In-App Camera QR Scanner, Download/Install Hub, Multi-Device Networking, & UI Controls.
+ * Engineered by alchemist4real
  */
 
 class Remote4RealApp {
@@ -12,13 +14,14 @@ class Remote4RealApp {
     this.hapticsEnabled = true;
     this.autoReconnect = true;
     this.isForcedLandscape = false;
+    this.isFullscreen = false;
     this.pingInterval = null;
     this.currentPingMs = 0;
 
     // PIN Security State
     this.currentPin = this.extractPinFromUrl() || localStorage.getItem('r4_security_pin') || '';
     this.enteredPin = '';
-    this.modesList = ['touchpad', 'screen', 'media', 'gamepad'];
+    this.modesList = ['touchpad', 'keyboard', 'keypad', 'screen', 'media', 'gamepad'];
 
     // Camera QR Scanner State
     this.qrVideo = null;
@@ -29,6 +32,9 @@ class Remote4RealApp {
 
     this.initSecurityUI();
     this.initScannerUI();
+    this.initModeDropdown();
+    this.initFullscreenUI();
+    this.initDownloadModal();
     this.initNetwork();
     this.initUI();
     this.initRotation();
@@ -50,32 +56,45 @@ class Remote4RealApp {
     const scanBtn = document.getElementById('btn-pin-qr-scan');
     const resetAuthBtn = document.getElementById('btn-reset-auth');
 
-    keypadBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const num = btn.getAttribute('data-num');
-        if (this.enteredPin.length < 4) {
-          this.enteredPin += num;
-          this.vibrate(10);
-          this.updatePinDots();
-          if (this.enteredPin.length === 4) {
-            this.submitPin(this.enteredPin);
-          }
+    const handleDigit = (num) => {
+      if (this.enteredPin.length < 4) {
+        this.enteredPin += num;
+        this.vibrate(12);
+        this.updatePinDots();
+        if (this.enteredPin.length === 4) {
+          setTimeout(() => this.submitPin(this.enteredPin), 60);
         }
-      });
+      }
+    };
+
+    keypadBtns.forEach((btn) => {
+      const num = btn.getAttribute('data-num');
+      const onKeypadPress = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDigit(num);
+      };
+      btn.addEventListener('touchstart', onKeypadPress, { passive: false });
+      btn.addEventListener('click', onKeypadPress);
     });
 
     if (backspaceBtn) {
-      backspaceBtn.addEventListener('click', () => {
+      const onBackspace = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (this.enteredPin.length > 0) {
           this.enteredPin = this.enteredPin.slice(0, -1);
           this.vibrate(10);
           this.updatePinDots();
         }
-      });
+      };
+      backspaceBtn.addEventListener('touchstart', onBackspace, { passive: false });
+      backspaceBtn.addEventListener('click', onBackspace);
     }
 
     if (scanBtn) {
-      scanBtn.addEventListener('click', () => {
+      scanBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         this.openQrScanner();
       });
     }
@@ -90,6 +109,21 @@ class Remote4RealApp {
         if (settingsModal) settingsModal.classList.add('hidden');
       });
     }
+
+    // Physical / virtual keyboard numpad fallback when PIN modal is open
+    window.addEventListener('keydown', (e) => {
+      if (pinModal && !pinModal.classList.contains('hidden')) {
+        if (/^[0-9]$/.test(e.key)) {
+          handleDigit(e.key);
+        } else if (e.key === 'Backspace') {
+          if (this.enteredPin.length > 0) {
+            this.enteredPin = this.enteredPin.slice(0, -1);
+            this.vibrate(10);
+            this.updatePinDots();
+          }
+        }
+      }
+    });
   }
 
   updatePinDots() {
@@ -142,13 +176,15 @@ class Remote4RealApp {
     }
 
     if (scanBtn) {
-      scanBtn.addEventListener('click', () => {
+      scanBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         this.openQrScanner();
       });
     }
 
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         this.closeQrScanner();
       });
     }
@@ -170,7 +206,7 @@ class Remote4RealApp {
         this.qrVideo.setAttribute('playsinline', true);
         await this.qrVideo.play();
         this.isScanning = true;
-        if (statusHint) statusHint.textContent = 'ALIGN QR CODE IN VIEW';
+        if (statusHint) statusHint.textContent = 'ALIGN PC QR CODE IN VIEW';
         requestAnimationFrame(() => this.scanQrFrame());
       }
     } catch (err) {
@@ -222,24 +258,164 @@ class Remote4RealApp {
       const url = new URL(qrData);
       const pin = url.searchParams.get('pin') || url.searchParams.get('auth');
       const host = url.hostname;
-      const port = url.port || '8080';
 
       if (pin) {
         this.currentPin = pin;
         localStorage.setItem('r4_security_pin', pin);
       }
 
-      // If scanned a different host IP, redirect or reconnect
       if (host && host !== window.location.hostname) {
         window.location.href = url.href;
       } else if (pin) {
         this.submitPin(pin);
       }
     } catch (e) {
-      // Direct PIN string
       if (/^\d{4,8}$/.test(qrData.trim())) {
         this.submitPin(qrData.trim());
       }
+    }
+  }
+
+  // ==========================================
+  // DROPDOWN MODE SELECTOR
+  // ==========================================
+  initModeDropdown() {
+    const triggerBtn = document.getElementById('btn-mode-dropdown');
+    const menu = document.getElementById('mode-dropdown-menu');
+    const options = document.querySelectorAll('.mode-option-item');
+
+    if (triggerBtn && menu) {
+      triggerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = !menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', isOpen);
+        triggerBtn.classList.toggle('active', !isOpen);
+        this.vibrate(8);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !triggerBtn.contains(e.target)) {
+          menu.classList.add('hidden');
+          triggerBtn.classList.remove('active');
+        }
+      });
+    }
+
+    options.forEach(opt => {
+      opt.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mode = opt.getAttribute('data-mode');
+        if (mode) {
+          this.switchMode(mode);
+          if (menu) menu.classList.add('hidden');
+          if (triggerBtn) triggerBtn.classList.remove('active');
+        }
+      });
+    });
+  }
+
+  // ==========================================
+  // FULLSCREEN ENGINE
+  // ==========================================
+  initFullscreenUI() {
+    const fsBtns = document.querySelectorAll('#btn-fullscreen, .btn-trigger-fs');
+    const exitFsBtn = document.getElementById('btn-exit-fullscreen');
+
+    fsBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.toggleFullscreen();
+      });
+    });
+
+    if (exitFsBtn) {
+      exitFsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.toggleFullscreen(false);
+      });
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      this.syncFullscreenState(Boolean(document.fullscreenElement));
+    });
+  }
+
+  toggleFullscreen(forceState = null) {
+    const targetState = forceState !== null ? forceState : !this.isFullscreen;
+    this.vibrate(15);
+
+    if (targetState) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      }
+      this.syncFullscreenState(true);
+    } else {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+      this.syncFullscreenState(false);
+    }
+  }
+
+  syncFullscreenState(active) {
+    this.isFullscreen = active;
+    const wrapper = document.getElementById('app-wrapper');
+    const exitBtn = document.getElementById('btn-exit-fullscreen');
+
+    if (wrapper) wrapper.classList.toggle('fs-active', active);
+    if (exitBtn) exitBtn.classList.toggle('visible', active);
+  }
+
+  // ==========================================
+  // DOWNLOAD & INSTALL MODAL
+  // ==========================================
+  initDownloadModal() {
+    const downloadBtn = document.getElementById('btn-download-app');
+    const modal = document.getElementById('download-modal');
+    const closeBtn = document.getElementById('btn-close-download');
+    const copyCmdBtn = document.getElementById('btn-copy-install-cmd');
+
+    if (downloadBtn && modal) {
+      downloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.classList.remove('hidden');
+        this.vibrate(10);
+      });
+    }
+
+    if (closeBtn && modal) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.classList.add('hidden');
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.add('hidden');
+      });
+    }
+
+    if (copyCmdBtn) {
+      copyCmdBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cmd = 'irm https://remote4real.vercel.app/install.ps1 | iex';
+        navigator.clipboard.writeText(cmd).then(() => {
+          this.vibrate([20, 50, 20]);
+          copyCmdBtn.textContent = 'COPIED TO CLIPBOARD!';
+          copyCmdBtn.classList.add('copied');
+          setTimeout(() => {
+            copyCmdBtn.textContent = 'COPY COMMAND';
+            copyCmdBtn.classList.remove('copied');
+          }, 2000);
+        }).catch(() => {
+          prompt('Copy this command for Windows PowerShell:', cmd);
+        });
+      });
     }
   }
 
@@ -262,7 +438,6 @@ class Remote4RealApp {
         this.isConnected = true;
         this.startPingLoop();
 
-        // Send PIN auth immediately if we have it
         if (this.currentPin) {
           this.send({ t: 'auth', pin: this.currentPin });
         }
@@ -408,7 +583,7 @@ class Remote4RealApp {
     let startTime = 0;
 
     window.addEventListener('touchstart', (e) => {
-      if (['mode-gamepad', 'mode-screen'].includes(this.activeMode)) return;
+      if (['gamepad', 'screen'].includes(this.activeMode)) return;
 
       if (e.touches.length === 1) {
         startX = e.touches[0].clientX;
@@ -418,7 +593,7 @@ class Remote4RealApp {
     }, { passive: true });
 
     window.addEventListener('touchend', (e) => {
-      if (['mode-gamepad', 'mode-screen'].includes(this.activeMode)) return;
+      if (['gamepad', 'screen'].includes(this.activeMode)) return;
 
       if (e.changedTouches.length === 1) {
         const deltaX = e.changedTouches[0].clientX - startX;
@@ -441,37 +616,20 @@ class Remote4RealApp {
   // UI & NAVIGATION
   // ==========================================
   initUI() {
-    const dockTabs = document.querySelectorAll('.dock-item');
-    dockTabs.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const mode = btn.getAttribute('data-mode');
-        this.switchMode(mode);
-      });
-    });
-
-    const fullBtn = document.getElementById('btn-fullscreen');
-    if (fullBtn) {
-      fullBtn.addEventListener('click', () => {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        } else {
-          document.exitFullscreen().catch(() => {});
-        }
-      });
-    }
-
     const settingsBtn = document.getElementById('btn-settings');
     const settingsModal = document.getElementById('settings-modal');
     const closeSettingsBtn = document.getElementById('btn-close-settings');
 
     if (settingsBtn && settingsModal) {
-      settingsBtn.addEventListener('click', () => {
+      settingsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         settingsModal.classList.remove('hidden');
       });
     }
 
     if (closeSettingsBtn && settingsModal) {
-      closeSettingsBtn.addEventListener('click', () => {
+      closeSettingsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         settingsModal.classList.add('hidden');
       });
       settingsModal.addEventListener('click', (e) => {
@@ -511,7 +669,21 @@ class Remote4RealApp {
     this.activeMode = mode;
     this.vibrate(10);
 
-    document.querySelectorAll('.dock-item').forEach((b) => {
+    // Update Dropdown current label & active option
+    const labelEl = document.getElementById('current-mode-name');
+    if (labelEl) {
+      const modeNames = {
+        touchpad: 'TRACKPAD',
+        keyboard: 'KEYBOARD',
+        keypad: 'KEYS+PAD',
+        screen: 'SCREEN',
+        media: 'MEDIA',
+        gamepad: 'GAMEPAD'
+      };
+      labelEl.textContent = modeNames[mode] || mode.toUpperCase();
+    }
+
+    document.querySelectorAll('.mode-option-item').forEach((b) => {
       b.classList.toggle('active', b.getAttribute('data-mode') === mode);
     });
 

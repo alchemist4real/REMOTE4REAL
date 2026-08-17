@@ -6,9 +6,6 @@ class TouchpadController {
   constructor() {
     this.touchpad = document.getElementById('touchpad-area');
     this.rippleContainer = document.getElementById('touch-ripple-container');
-    this.deckInput = document.getElementById('deck-native-input');
-    this.deckSendBtn = document.getElementById('btn-deck-send');
-    this.deckClearBtn = document.getElementById('btn-deck-clear');
     
     this.sensitivity = 1.2;
     this.touchStartTime = 0;
@@ -19,7 +16,6 @@ class TouchpadController {
 
     this.initTouchpadEvents();
     this.initMouseButtons();
-    this.initNativeTypingDock();
     this.initModifierChips();
   }
 
@@ -153,78 +149,7 @@ class TouchpadController {
     }, 400);
   }
 
-  // ==========================================
-  // 2. INTEGRATED NATIVE TYPING DOCK
-  // ==========================================
-  initNativeTypingDock() {
-    if (!this.deckInput) return;
 
-    let lastVal = '';
-
-    this.deckInput.addEventListener('input', (e) => {
-      const currentVal = this.deckInput.value;
-
-      // 1. Single character insertion
-      if (e.inputType === 'insertText' && e.data) {
-        window.app.send({ t: 'type_text', text: e.data });
-        window.app.vibrate(8);
-      }
-      // 2. Backspace / Delete
-      else if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') {
-        window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
-        window.app.vibrate(10);
-      }
-      // 3. Enter / Linebreak
-      else if (e.inputType === 'insertLineBreak') {
-        window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-        window.app.vibrate(12);
-      }
-      // 4. Voice typing / Swipe Typing
-      else {
-        if (currentVal.length > lastVal.length) {
-          const addedText = currentVal.slice(lastVal.length);
-          window.app.send({ t: 'type_text', text: addedText });
-          window.app.vibrate(8);
-        } else if (currentVal.length < lastVal.length) {
-          const deleteCount = lastVal.length - currentVal.length;
-          for (let i = 0; i < deleteCount; i++) {
-            window.app.send({ t: 'key', k: 'backspace', act: 'tap' });
-          }
-          window.app.vibrate(10);
-        }
-      }
-
-      lastVal = currentVal;
-    });
-
-    this.deckInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-        window.app.vibrate(12);
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        window.app.send({ t: 'key', k: 'tab', act: 'tap' });
-      } else if (e.key === 'Escape') {
-        window.app.send({ t: 'key', k: 'escape', act: 'tap' });
-        this.deckInput.blur();
-      }
-    });
-
-    if (this.deckSendBtn) {
-      this.deckSendBtn.addEventListener('click', () => {
-        window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-        window.app.vibrate(15);
-      });
-    }
-
-    if (this.deckClearBtn) {
-      this.deckClearBtn.addEventListener('click', () => {
-        this.deckInput.value = '';
-        lastVal = '';
-        window.app.vibrate(10);
-      });
-    }
-  }
 
   // ==========================================
   // 3. PC MODIFIER CHIPS

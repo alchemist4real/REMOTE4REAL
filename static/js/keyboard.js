@@ -6,13 +6,6 @@
 
 class KeyboardController {
   constructor() {
-    this.deckInput = document.getElementById('deck-native-input');
-    this.btnSend = document.getElementById('btn-deck-send');
-    this.btnClear = document.getElementById('btn-deck-clear');
-
-    this.bridgeInput = document.getElementById('native-keyboard-bridge');
-    this.liveTextarea = document.getElementById('native-live-input');
-
     this.modifiers = {
       ctrl: false,
       alt: false,
@@ -29,7 +22,16 @@ class KeyboardController {
   // REAL-TIME NATIVE PHONE KEYBOARD STREAMER
   // ==========================================
   initNativeTyping() {
-    const bindTypingInput = (inputEl) => {
+    const inputs = [
+      { inputId: 'deck-native-input', sendId: 'btn-deck-send', clearId: 'btn-deck-clear' },
+      { inputId: 'keyboard-native-input', sendId: 'btn-keyboard-send', clearId: 'btn-keyboard-clear' },
+      { inputId: 'keypad-native-input', sendId: 'btn-keypad-send', clearId: 'btn-keypad-clear' },
+      { inputId: 'native-keyboard-bridge', sendId: null, clearId: null },
+      { inputId: 'native-live-input', sendId: null, clearId: null }
+    ];
+
+    inputs.forEach(({ inputId, sendId, clearId }) => {
+      const inputEl = document.getElementById(inputId);
       if (!inputEl) return;
 
       let lastVal = inputEl.value || '';
@@ -80,12 +82,21 @@ class KeyboardController {
         lastVal = currentVal;
       });
 
-      // Special keydowns (Enter, Tab, Escape, Backspace)
+      // Special keydowns
       inputEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          if (window.app && window.app.send) {
-            window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+          const val = inputEl.value;
+          if (val) {
+            if (window.app && window.app.send) {
+              window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+            }
+            inputEl.value = '';
+            lastVal = '';
+          } else {
+            if (window.app && window.app.send) {
+              window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+            }
           }
           if (window.app && window.app.vibrate) window.app.vibrate(12);
         } else if (e.key === 'Tab') {
@@ -99,45 +110,50 @@ class KeyboardController {
           if (window.app && window.app.send) {
             window.app.send({ t: 'key', k: 'escape', act: 'tap' });
           }
+          inputEl.blur();
           if (window.app && window.app.vibrate) window.app.vibrate(10);
         }
       });
-    };
 
-    bindTypingInput(this.deckInput);
-    bindTypingInput(this.bridgeInput);
-    bindTypingInput(this.liveTextarea);
-
-    if (this.btnSend && this.deckInput) {
-      const handleSend = (e) => {
-        e.preventDefault();
-        const val = this.deckInput.value;
-        if (val) {
-          if (window.app && window.app.send) {
-            window.app.send({ t: 'type_text', text: val });
-            window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-          }
-          this.deckInput.value = '';
-        } else {
-          if (window.app && window.app.send) {
-            window.app.send({ t: 'key', k: 'enter', act: 'tap' });
-          }
+      // Send button
+      if (sendId) {
+        const sendBtn = document.getElementById(sendId);
+        if (sendBtn) {
+          const handleSend = (e) => {
+            e.preventDefault();
+            const val = inputEl.value;
+            if (val) {
+              if (window.app && window.app.send) {
+                window.app.send({ t: 'type_text', text: val });
+                window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+              }
+              inputEl.value = '';
+              lastVal = '';
+            } else {
+              if (window.app && window.app.send) {
+                window.app.send({ t: 'key', k: 'enter', act: 'tap' });
+              }
+            }
+            if (window.app && window.app.vibrate) window.app.vibrate([12, 25, 12]);
+          };
+          sendBtn.addEventListener('click', handleSend);
         }
-        if (window.app && window.app.vibrate) window.app.vibrate([12, 25, 12]);
-      };
-      this.btnSend.addEventListener('click', handleSend);
-      this.btnSend.addEventListener('touchstart', handleSend, { passive: false });
-    }
+      }
 
-    if (this.btnClear && this.deckInput) {
-      const handleClear = (e) => {
-        e.preventDefault();
-        this.deckInput.value = '';
-        if (window.app && window.app.vibrate) window.app.vibrate(10);
-      };
-      this.btnClear.addEventListener('click', handleClear);
-      this.btnClear.addEventListener('touchstart', handleClear, { passive: false });
-    }
+      // Clear button
+      if (clearId) {
+        const clearBtn = document.getElementById(clearId);
+        if (clearBtn) {
+          const handleClear = (e) => {
+            e.preventDefault();
+            inputEl.value = '';
+            lastVal = '';
+            if (window.app && window.app.vibrate) window.app.vibrate(10);
+          };
+          clearBtn.addEventListener('click', handleClear);
+        }
+      }
+    });
   }
 
   // ==========================================
@@ -166,7 +182,6 @@ class KeyboardController {
         setTimeout(() => chip.classList.remove('active'), 180);
       };
 
-      chip.addEventListener('touchstart', trigger, { passive: false });
       chip.addEventListener('click', trigger);
     });
   }
@@ -193,7 +208,6 @@ class KeyboardController {
         setTimeout(() => btn.classList.remove('active'), 140);
       };
 
-      btn.addEventListener('touchstart', handlePress, { passive: false });
       btn.addEventListener('click', handlePress);
     });
   }

@@ -1,9 +1,17 @@
 @echo off
-title REMOTE4REAL - PC Companion Server
+title REMOTE4REAL - Zero-Friction Launcher
 cd /d "%~dp0"
+
 echo ========================================================
-echo   Starting REMOTE4REAL PC Companion Server...
+echo   REMOTE4REAL — Zero-Friction Launcher
+echo   by alchemist4real
 echo ========================================================
 echo.
-python gui_app.py
-pause
+
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_environment.ps1"
+
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo [ERROR] Launcher encountered an issue (Exit code: %ERRORLEVEL%).
+    pause
+)

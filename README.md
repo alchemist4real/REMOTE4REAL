@@ -18,14 +18,40 @@
 
 ## 🌟 Core Features
 
-- **🎮 4-in-1 Control Modes**:
-  1. **Touchpad & Keyboard**: 120Hz smooth trackpad gestures, scroll wheels, PC modifier chips (Ctrl, Alt, Win, Shift), and direct native mobile keyboard typing.
-  2. **Screen Mirror**: Real-time low-latency desktop screen mirroring with direct touch click support and live FPS monitor.
-  3. **Media Remote**: One-tap YouTube launcher & remote deck, Spotify launcher & track controls, and master volume mixer.
-  4. **Gamepad**: Console controller with dual analog spring thumbsticks, D-Pad, ABXY diamond cluster, analog shoulder triggers with live gauges, and motion gyroscope steering.
+- **🎮 6-in-1 Versatile Control Modes**:
+  1. **Trackpad & Laptop Deck**: 120Hz smooth trackpad gestures, scroll wheels, PC modifier chips (Ctrl, Alt, Win, Shift, Taskmgr, Close), and direct native mobile keyboard typing.
+  2. **Keyboard Only**: Full on-screen virtual QWERTY keyboard with F1–F12 function row, sticky modifiers (Ctrl/Alt/Shift/Win), arrow navigation, and native typing dock.
+  3. **Keys + Trackpad**: Split viewport combining a top 45% touch surface + mouse click buttons with a bottom 55% tactile QWERTY keyboard.
+  4. **Touchscreen Stream**: Real-time 60 FPS desktop screen mirror with direct touch clicks, fit/fill scaling, and device auto-rotation sync.
+  5. **Media Remote**: Active tab search & browser navigation for YouTube (`/` hotkey integration), Spotify app search (`Ctrl+L`) & desktop app controls, and master volume mixer.
+  6. **Gamepad**: Realistic dark console controller skin with color-coded ABXY tactile buttons, cross D-Pad, dual analog thumbsticks (L3/R3), and shoulder triggers.
 - **🔒 PIN Security**: Dynamic 4-digit session PIN preventing unauthorized device connection on local networks.
 - **⚡ Dual Connection**: Supports both Local Wi-Fi and Bluetooth PAN Tethering.
 - **🎨 Swiss/Braun Minimalist Aesthetic**: High-contrast monochromatic UI, custom OffBit typography, and zero-emoji design.
+
+---
+
+## 🚀 One-Command Zero-Friction Setup (Clean PC / Laptop)
+
+Run this single command in PowerShell on any Windows laptop (even without Python or Git pre-installed):
+
+```powershell
+irm https://remote4real.vercel.app/install.ps1 | iex
+```
+
+*This prompts for an installation folder (defaults to `~/REMOTE4REAL`), clones the repo, installs Python if needed, sets up `.venv`, installs all drivers/packages, configures firewall rules, and creates a Desktop shortcut.*
+
+**Custom path via command:**
+```powershell
+$env:REMOTE4REAL_DIR = "D:\MyApps\REMOTE4REAL"; irm https://remote4real.vercel.app/install.ps1 | iex
+```
+
+---
+
+## ⚡ 1-Click Run & Auto-Update
+
+- **1-Click Run**: Double-click `run.bat` — it auto-detects dependencies, tests system health, and launches the app.
+- **Auto-Update**: Installed copies automatically check GitHub Releases for updates and display a one-click update banner inside the Desktop GUI.
 
 ---
 
@@ -35,7 +61,7 @@ All compiled binaries, scripts, and multi-platform packages are organized in the
 
 | Platform | Package / Method | Path |
 | :--- | :--- | :--- |
-| **Windows Desktop** | Standalone `.exe` & 1-click Shortcut Setup | [`installers/Desktop/`](./installers/Desktop/) |
+| **Windows Desktop** | Standalone `.exe`, 1-click Shortcut Setup & Zero-Friction Script | [`installers/Desktop/`](./installers/Desktop/) |
 | **Android** | Standalone `.apk` Builder & ADB Fast Installer | [`installers/Android/`](./installers/Android/) |
 | **iOS (iPhone/iPad)** | EAS `.ipa` Cloud Builder & Standalone Safari PWA | [`installers/iOS/`](./installers/iOS/) |
 
@@ -43,15 +69,15 @@ All compiled binaries, scripts, and multi-platform packages are organized in the
 
 ---
 
-## 🚀 Quick Start (Development)
+## 💻 Manual Quick Start (Development)
 
 ### 1. Run Desktop Companion Server:
 ```powershell
-# Install requirements
-pip install -r requirements.txt
+# Run zero-friction setup and launcher
+.\setup_environment.ps1
 
-# Run Desktop Control Panel
-python gui_app.py
+# Or run manual diagnostic
+python health_check.py
 ```
 *Or double-click `run.bat`.*
 
